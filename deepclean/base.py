@@ -41,8 +41,12 @@ class DeepCleanTask(law.SandboxTask):
             )
 
     @property
+    def ifo(self):
+        return self.cfg.ifo.value
+
+    @property
     def strain_channel(self):
-        return f"{self.cfg.ifo.value}:{self.cfg.strain_channel}"
+        return f"{self.ifo}:{self.cfg.strain_channel}"
 
     @property
     def witnesses(self):
@@ -51,14 +55,6 @@ class DeepCleanTask(law.SandboxTask):
     @property
     def sandbox(self):
         return f"deepclean::{self.image}"
-
-    @property
-    def singularity_forward_law(self) -> bool:
-        return False
-
-    @property
-    def singularity_allow_binds(self) -> bool:
-        return True
 
     @property
     def singularity_args(self) -> Callable:

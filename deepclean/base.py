@@ -15,26 +15,29 @@ root = Path(__file__).resolve().parent.parent
 
 class DeepCleanSandbox(singularity.SingularitySandbox):
     sandbox_type = "deepclean"
-    config_section_prefix = "deepclean"
+    # config_section_prefix = "deepclean"
 
     def _get_volumes(self):
         volumes = super()._get_volumes()
         if self.task and getattr(self.task, "dev", False):
-            volumes[root] = "/opt/deepclean"
+            volumes[str(root)] = "/opt/deepclean"
         return volumes
 
 
-law.config.update(
-    {
-        "deepclean": {
-            "stagein_dir_name": "stagein",
-            "stageout_dir_name": "stageout",
-            "law_executable": "law",
-        },
-        "deepclean_env": {},
-        "deepclean_volumes": {},
-    }
-)
+# law.config.update(
+#     {
+#         "deepclean_sandbox": {
+#             "stagein_dir_name": "stagein",
+#             "stageout_dir_name": "stageout",
+#             "law_executable": "law",
+#             "forward_dir": "/law_forward",
+#             "python_dir": "py",
+#             "bin_dir": "bin"
+#         },
+#         "deepclean_sandbox_env": {},
+#         "deepclean_sandbox_volumes": {},
+#     }
+# )
 
 
 class DeepCleanTask(law.SandboxTask):
@@ -64,7 +67,7 @@ class DeepCleanTask(law.SandboxTask):
 
     @property
     def sandbox(self):
-        return f"singularity::{self.image}"
+        return f"deepclean::{self.image}"
 
     @property
     def singularity_forward_law(self) -> bool:

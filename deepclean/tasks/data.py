@@ -15,6 +15,14 @@ class DataTask(DeepCleanTask):
     def cli(self):
         return [self.python, "/opt/deepclean/projects/data/data"]
 
+    def sandbox_env(self, env):
+        env = super().sandbox_env(env)
+        for envvar in ["KRB5_KTNAME", "X509_USER_PROXY"]:
+            value = os.getenv(envvar)
+            if value is not None:
+                env[envvar] = value
+        return env
+
 
 class Query(DataTask):
     start = luigi.FloatParameter()
@@ -52,7 +60,12 @@ class Fetch(DataTask, law.LocalWorkflow):
     min_duration = luigi.FloatParameter(default=0)
     prefix = luigi.Parameter(default="deepclean")
     flags = luigi.ListParameter(default=["DCS-ANALYSIS_READY_C01:1"])
-    segments_file = luigi.Parameter(default=None)
+    segments_file = luigi.Parameter(default="")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.segments_file:
+            self.segments_file = os.path.join(self.data_dir, "segments.txt")
 
     @law.dynamic_workflow_condition
     def workflow_condition(self) -> bool:
@@ -60,9 +73,14 @@ class Fetch(DataTask, law.LocalWorkflow):
 
     @workflow_condition.create_branch_map
     def create_branch_map(self):
-        segments = self.input()["segments"].load().splitlines()[1:]
+        segments = self.input()["segments"].load().splitlines()[1:3]
         segments = [i.split("\t") for i in segments]
         return dict([(int(i[0]) + 1, i[1::2]) for i in segments])
+
+    def workflow_requires(self):
+        reqs = super().workflow_requires()
+        reqs["segments"] = Query.req(self, output_file=self.segments_file)
+        return reqs
 
     @workflow_condition.output
     def output(self):
@@ -70,19 +88,10 @@ class Fetch(DataTask, law.LocalWorkflow):
         start = int(float(start))
         duration = int(float(duration))
         fname = f"{self.prefix}-{start}-{duration}.hdf5"
+
         target = law.LocalDirectoryTarget(self.data_dir)
-        return target.child(fname, type="f")
-
-    def workflow_requires(self):
-        reqs = super().workflow_requires()
-
-        if self.segments_file is None:
-            segments_file = os.path.join(self.data_dir, "segments.txt")
-        else:
-            segments_file = self.segments_file
-
-        reqs["segments"] = Query.req(self, output_file=segments_file)
-        return reqs
+        target = target.child(fname, type="f")
+        return target
 
     @property
     def command(self):

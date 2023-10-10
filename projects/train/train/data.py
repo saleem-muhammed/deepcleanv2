@@ -177,8 +177,12 @@ class DeepCleanDataset(pl.LightningDataModule):
         self.__logger.info("Preprocessing training data")
         # preprocess our inputs by standardizing
         # them to 0 mean unit variance across
-        # each channel
+        # each channel. Ignore any channels that
+        # are constant in the training data
         self.X_scaler.fit(train_X)
+        std = self.X_scaler.std
+        std[std == 0] = 1
+
         self.train_X = self.X_scaler(train_X)
         self.valid_X = self.X_scaler(valid_X)
 

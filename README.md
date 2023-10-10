@@ -53,8 +53,13 @@ export RESULTS_DIR=~/deepclean/results
 mkdir -p $RESULTS_DIR
 ```
 
+### Configuring your cleaning problem
+DeepClean can be easily configured to remove any number of different noise couplings from the strain data, and targeted at any interferometer for which that coupling has had witness channels identified in the [`couplings`](./deepclean/couplings) submodule.
+To run a pipeline for a particular coupling, just set the environment variable `DEEPCLEAN_IFO` to the inteferometer you want to target, e.g. `export DEEPCLEAN_IFO=H1`, then edit the `problem` entry in the `deepclean` table of your [`luigi.cfg`](./luigi.cfg) to specify the comma-separated list of couplings to target.
+Right now, only the channels for the `60Hz` coupling at Hanford and Livingston (`H1` and `L1`) are defined, but this structure should make it simple to train on new couplings when their corresponding witnesses are identified.
+
 ### Dataset generation
-I don't have this built into a `law.Task` yet, so you'll have to run this one manually. Start by building the container
+Start by building the data generation container
 
 ```bash
 cd projects/data
@@ -62,24 +67,19 @@ apptainer build $DEEPCLEAN_CONTAINER_ROOT/data.sif apptainer.def
 cd -
 ```
 
-Then you can query segments containing usable data via
+Then you can query a stretch of time for all active segments and download the data for those segments via:
 
 ```bash
-apptainer run $DEEPCLEAN_CONTAINER_ROOT/data.sif \
-    python /opt/deepclean/projects/data/data --config /opt/deepclean/projects/data/config.yaml \
-        query --output-file $DATA_DIR/segments.txt
+poetry run law run deepclean.tasks.Fetch \
+    --data-dir $DATA_DIR \
+    --start 1250899218 \
+    --end 1252108818 \
+    --sample-rate 4096  \
+    --min-duration 8192 \
+    --max-duration 32768 \
+    --image data.sif \
+    --job-log fetch.log
 ```
-
-Then select some segment times from the output text file and run (for example)
-
-```bash
-apptainer run $DEEPCLEAN_CONTAINER_ROOT/data.sif \
-    python /opt/deepclean/projects/data/data --config /opt/deepclean/projects/data/config.yaml \
-        fetch --output-directory $DATA_DIR --start 1250916945 --end 1250951947
-```
-
-#### Making changes to the code
-Once these tools are moved into the `deepclean` pipeline this will be done automatically, but for now if you make any local changes to the code, be sure to add the `--bind .:/opt/deepclean` flag after `apptainer run` in the commands above so that you changes are reflected in the container.
 
 ### Training
 Once you've generated your training data, you're ready to train! Start by building your training container image
@@ -100,3 +100,6 @@ poetry run law run deepclean.tasks.Train  \
     --data-fname $DATA_DIR/deepclean-1250916945-35002.hdf5 \
     --output-dir $RESULTS_DIR/my-first-run
 ```
+
+#### Making changes to the code
+If you make changes to the code that you want to experiment with, you can map them into the container at run time without having to rebuild simply by passing the `--dev` flag to any of the `law run` commands.

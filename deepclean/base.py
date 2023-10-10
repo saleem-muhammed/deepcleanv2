@@ -18,17 +18,6 @@ class DeepCleanSandbox(singularity.SingularitySandbox):
 
     def _get_volumes(self):
         volumes = super()._get_volumes()
-        fnames = [
-            "/etc/krb5.conf",
-            "/etc/krb5.conf.d",
-            "/etc/pki/tls/certs/ca-bundle.crt",
-        ]
-        for fname in fnames:
-            volumes[fname] = fname
-
-        for dir in ["/etc/condor", "/cvmfs"]:
-            volumes[dir] = dir
-
         if self.task and getattr(self.task, "dev", False):
             volumes[str(root)] = "/opt/deepclean"
         return volumes

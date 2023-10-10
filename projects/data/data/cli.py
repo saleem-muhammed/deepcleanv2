@@ -1,8 +1,11 @@
+import logging
 import os
 
 from data.find import DataQualityDict
 from gwpy.timeseries import TimeSeriesDict
 from jsonargparse import ActionConfigFile, ArgumentParser
+
+from utils.logging import configure_logging
 
 
 def fetch(
@@ -14,7 +17,14 @@ def fetch(
     a parser out of them.
     """
 
-    X = TimeSeriesDict.fetch(start=start, end=end, channels=channels)
+    logging.info(
+        "Fetching {}s worth of data starting at GPS timestamp {}".format(
+            end - start, start
+        )
+    )
+    X = TimeSeriesDict.get(start=start, end=end, channels=channels)
+
+    logging.info(f"Data downloaded, resampling to {sample_rate}Hz")
     return X.resample(sample_rate)
 
 
@@ -31,15 +41,32 @@ def main(args=None):
 
     parser = ArgumentParser()
     parser.add_argument("--config", action=ActionConfigFile)
+    parser.add_argument("--log-file", type=str, default=None)
+    parser.add_argument("--verbose", type=bool, default=False)
+
     subcommands = parser.add_subcommands()
     subcommands.add_subcommand("query", query_parser)
     subcommands.add_subcommand("fetch", fetch_parser)
 
     args = parser.parse_args(args)
+    configure_logging(args.log_file, args.verbose)
+
     if args.subcommand == "query":
         args = args.query.as_dict()
         output_file = args.pop("output_file")
+
+        logging.info(
+            "Querying active segments in interval ({start}, {end})".format(
+                **args
+            )
+        )
         segments = DataQualityDict.query_segments(**args)
+
+        logging.info(
+            "Discovered {} valid segments, writing to {}".format(
+                len(segments), output_file
+            )
+        )
         segments.write(output_file)
     elif args.subcommand == "fetch":
         args = args.fetch.as_dict()
@@ -52,6 +79,8 @@ def main(args=None):
             prefix, int(args["start"]), int(duration)
         )
         fname = os.path.join(output_directory, fname)
+
+        logging.info(f"Writing downloaded data to {fname}")
         X.write(fname, format="hdf5")
 
 

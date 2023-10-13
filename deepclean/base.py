@@ -66,9 +66,14 @@ class DeepCleanTask(law.SandboxTask):
         return arg_getter
 
     def sandbox_env(self, _):
+        env = {}
+        for envvar, value in os.environ.items():
+            if envvar.startswith("DEEPCLEAN_"):
+                env[envvar] = value
+
         if self.gpus:
-            return {"CUDA_VISIBLE_DEVICES": self.gpus}
-        return {}
+            env["CUDA_VISIBLE_DEVICES"] = self.gpus
+        return env
 
     @property
     def python(self) -> str:

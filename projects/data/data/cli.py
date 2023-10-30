@@ -22,7 +22,7 @@ def fetch(
             end - start, start
         )
     )
-    X = TimeSeriesDict.get(start=start, end=end, channels=channels)
+    X = TimeSeriesDict.fetch(start=start, end=end, channels=channels)
 
     logging.info(f"Data downloaded, resampling to {sample_rate}Hz")
     return X.resample(sample_rate)

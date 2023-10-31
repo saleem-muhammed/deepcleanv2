@@ -35,3 +35,12 @@ class deepclean(luigi.Config):
     @property
     def freq_high(self):
         return [i.freq_high for i in self.couplings]
+
+
+class wandb(luigi.Config):
+    api_key = luigi.Parameter(default=os.getenv("WANDB_API_KEY", ""))
+    entity = luigi.Parameter(default=os.getenv("WANDB_ENTITY", ""))
+    project = luigi.Parameter(default=os.getenv("WANDB_PROJECT", "deepclean"))
+    name = luigi.Parameter(default=os.getenv("WANDB_NAME", ""))
+    group = luigi.Parameter(default=os.getenv("WANDB_GROUP", ""))
+    tags = luigi.Parameter(default=os.getenv("WANDB_TAGS", ""))

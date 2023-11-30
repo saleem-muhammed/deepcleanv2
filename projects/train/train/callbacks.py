@@ -105,11 +105,19 @@ class ModelCheckpoint(ModelCheckpoint):
             loss=pl_module.loss,
         )
 
+        # TODO: we should probably establish an explicit
+        # validation_kernel_length that matches what
+        # we use at test time. If there were any issues
+        # with it, we would have caught it by now during
+        # validation, but worth making it explicit that
+        # these are different values.
         datamodule = trainer.datamodule
         kernel_size = int(
             datamodule.hparams.kernel_length * datamodule.sample_rate
         )
-        sample_input = torch.randn(1, datamodule.num_ifos, kernel_size)
+
+        num_witnesses = len(datamodule.witness_channels)
+        sample_input = torch.randn(1, num_witnesses, kernel_size)
         model = module.model.to("cpu")
         trace = torch.jit.trace(model, sample_input)
 

@@ -1,6 +1,4 @@
 import os
-import shlex
-import subprocess
 from collections.abc import Callable
 from pathlib import Path
 
@@ -9,6 +7,7 @@ import luigi
 from law.contrib import singularity
 
 from deepclean.config import deepclean as Config
+from deepclean.utils import stream_command
 
 root = Path(__file__).resolve().parent.parent
 
@@ -84,14 +83,4 @@ class DeepCleanTask(law.SandboxTask):
         return [self.python, "-c", "print('Hello world')"]
 
     def run(self):
-        try:
-            subprocess.run(
-                self.command, capture_output=True, check=True, text=True
-            )
-        except subprocess.CalledProcessError as e:
-            raise RuntimeError(
-                "Command '{}' failed with return code {} "
-                "and stderr:\n{}".format(
-                    shlex.join(e.cmd), e.returncode, e.stderr
-                )
-            ) from None
+        stream_command(self.command)

@@ -22,7 +22,9 @@ def fetch(
             end - start, start
         )
     )
-    X = TimeSeriesDict.fetch(start=start, end=end, channels=channels)
+    X = TimeSeriesDict.get(
+        start=start, end=end, channels=channels, allow_tape=True
+    )
 
     logging.info(f"Data downloaded, resampling to {sample_rate}Hz")
     return X.resample(sample_rate)
@@ -35,7 +37,6 @@ def main(args=None):
 
     fetch_parser = ArgumentParser()
     fetch_parser.add_function_arguments(fetch)
-    fetch_parser.add_argument("--sample-rate", type=float)
     fetch_parser.add_argument("--output-directory", "-o", type=str)
     fetch_parser.add_argument("--prefix", "-p", type=str, default="deepclean")
 

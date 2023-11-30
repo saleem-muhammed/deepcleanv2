@@ -11,6 +11,15 @@ ifos = Enum("ifo", ifos)
 problems = Enum("problem", problems)
 
 
+class wandb(luigi.Config):
+    api_key = luigi.Parameter(default=os.getenv("WANDB_API_KEY", ""))
+    entity = luigi.Parameter(default=os.getenv("WANDB_ENTITY", ""))
+    project = luigi.Parameter(default=os.getenv("WANDB_PROJECT", "aframe"))
+    name = luigi.Parameter(default=os.getenv("WANDB_NAME", ""))
+    group = luigi.Parameter(default=os.getenv("WANDB_GROUP", ""))
+    tags = luigi.Parameter(default=os.getenv("WANDB_TAGS", ""))
+
+
 class deepclean(luigi.Config):
     ifo = luigi.EnumParameter(enum=ifos)
     problem = luigi.EnumListParameter(enum=problems)
@@ -18,6 +27,8 @@ class deepclean(luigi.Config):
     container_root = luigi.Parameter(
         default=os.getenv("DEEPCLEAN_CONTAINER_ROOT", "")
     )
+
+    wandb = wandb()
 
     @property
     def couplings(self):

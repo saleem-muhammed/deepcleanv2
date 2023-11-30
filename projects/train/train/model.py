@@ -4,7 +4,7 @@ import torch
 from lightning import pytorch as pl
 
 from train.architectures import Architecture
-from train.callbacks import PsdPlotter
+from train.callbacks import ModelCheckpoint, PsdPlotter
 from train.metrics import OnlinePsdRatio, PsdRatio
 
 Tensor = torch.Tensor
@@ -69,7 +69,7 @@ class DeepClean(pl.LightningModule):
 
         # then tack on a checkpointer that uses these
         # metrcis for checkpointing the model
-        checkpoint = pl.callbacks.ModelCheckpoint(
+        checkpoint = ModelCheckpoint(
             monitor="val_loss",
             save_top_k=self.hparams.save_top_k_models,
             save_last=True,

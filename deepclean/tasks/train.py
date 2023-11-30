@@ -5,6 +5,9 @@ from deepclean.base import DeepCleanTask
 
 
 class Train(DeepCleanTask):
+    train_config = luigi.Parameter(
+        default="/opt/deepclean/projects/train/config.yaml"
+    )
     data_fname = luigi.Parameter()
     output_dir = luigi.Parameter()
     use_wandb = luigi.BoolParameter()
@@ -14,7 +17,10 @@ class Train(DeepCleanTask):
     # the data file.
 
     def make_name(self):
-        return f"{self.cfg.ifo}-{self.cfg.problem}-{self.output().basename}"
+        problems = "_".join([i.value for i in self.cfg.problem])
+        return "{}-{}-{}".format(
+            self.cfg.ifo, problems, self.output().parent.basename
+        )
 
     def configure_wandb(self, command: list[str]) -> None:
         command.append("--trainer.logger=WandbLogger")
@@ -38,7 +44,7 @@ class Train(DeepCleanTask):
             self.python,
             "/opt/deepclean/projects/train/train",
             "--config",
-            "/opt/deepclean/projects/train/config.yaml",
+            self.train_config,
             "--data.fname",
             self.data_fname,
             "--data.channels",
@@ -59,4 +65,5 @@ class Train(DeepCleanTask):
         return command
 
     def output(self):
-        return law.LocalDirectoryTarget(self.output_dir).child("model.pt")
+        output_dir = law.LocalDirectoryTarget(self.output_dir)
+        return output_dir.child("model.pt", type="f")

@@ -2,7 +2,7 @@ import os
 
 import h5py
 import torch
-from lightning.callbacks import Callback, ModelCheckpoint
+from lightning.pytorch.callbacks import Callback, ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 
 from train.plotting import plot_psds
@@ -11,7 +11,10 @@ from utils.plotting.utils import save
 
 class PsdPlotter(Callback):
     def on_fit_start(self, trainer, pl_module):
-        self.plot_dir = os.path.join(trainer.logger.log_dir, "plots")
+        log_dir = trainer.logger.log_dir or trainer.logger.save_dir
+
+        # TODO: support s3 here
+        self.plot_dir = os.path.join(log_dir, "plots")
         os.makedirs(self.plot_dir, exist_ok=True)
 
     def on_test_start(self, trainer, pl_module):

@@ -36,7 +36,7 @@ data:
   # freq_low: []
   # freq_high: []
 optimizer:
-  lr: 0.512
+  lr: 0.25
 lr_scheduler:
   pct_start: 0.33
 trainer:

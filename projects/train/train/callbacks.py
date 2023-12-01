@@ -18,7 +18,8 @@ class PsdPlotter(Callback):
         os.makedirs(self.plot_dir, exist_ok=True)
 
     def on_test_start(self, trainer, pl_module):
-        self.test_dir = os.path.join(trainer.logger.log_dir, "test")
+        log_dir = trainer.logger.log_dir or trainer.logger.save_dir
+        self.test_dir = os.path.join(log_dir, "test")
         os.makedirs(self.test_dir, exist_ok=True)
 
     def log_plots(self, layout, fname, trainer):

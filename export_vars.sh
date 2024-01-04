@@ -11,3 +11,5 @@ mkdir -p $RESULTS_DIR
 
 export DEEPCLEAN_IFO=H1
 
+exec "$@"
+

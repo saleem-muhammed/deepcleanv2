@@ -9,5 +9,3 @@ mkdir -p $DATA_DIR
 export RESULTS_DIR=~/dc-demo/results
 mkdir -p $RESULTS_DIR
 
-export DEEPCLEAN_IFO=H1
-

@@ -8,5 +8,5 @@ Stage: build
 %post
 python -m pip install poetry
 poetry config virtualenvs.create false
-cd /opt/deepclean/projects/train
+cd /opt/deepclean/projects/test
 poetry install

@@ -9,4 +9,4 @@ nohup poetry run law run deepclean.tasks.Train \
 	--image train.sif \
 	--gpus $GPU_INDEX \
 	--data-fname $DATA_DIR/K-K1_lldata-1369291863-16384.hdf5 \
-	--output-dir $RESULTS_DIR/test_train > test_train.out &
+	--output-dir $RESULTS_DIR/test_train_K1 > test_train_K1.out &

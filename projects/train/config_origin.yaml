@@ -30,7 +30,7 @@ data:
   start_offset: 0
 
   # preprocessing args
-  batch_size: 32
+  batch_size: 512
   kernel_length: 8
   filt_order: 8
   # freq_low: []

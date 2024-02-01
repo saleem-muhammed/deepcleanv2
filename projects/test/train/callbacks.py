@@ -32,9 +32,7 @@ class PsdPlotter(Callback):
 
             key = os.path.basename(fname).split("-")[0]
             html = wandb.Html(fname)
-            trainer.logger.log_table(
-                "samples", columns=[f"{key}-psds"], data=[[html]]
-            )
+            trainer.logger.log_table("samples", columns=[f"{key}-psds"], data=[[html]])
 
     def _shared_eval(self, pl_module):
         # use our metric to produce the online-cleaned
@@ -84,9 +82,7 @@ class PsdPlotter(Callback):
     def on_test_epoch_end(self, trainer, pl_module):
         noise, strain, p = self._shared_eval(pl_module)
         loss = pl_module.loss(noise, strain)
-        pl_module.log(
-            "test_loss", loss, on_epoch=True, sync_dist=True, logger=True
-        )
+        pl_module.log("test_loss", loss, on_epoch=True, sync_dist=True, logger=True)
 
         fname = os.path.join(self.test_dir, "test-psds.html")
         self.log_plots(p, fname, trainer)
@@ -113,9 +109,7 @@ class ModelCheckpoint(ModelCheckpoint):
         # validation, but worth making it explicit that
         # these are different values.
         datamodule = trainer.datamodule
-        kernel_size = int(
-            datamodule.hparams.kernel_length * datamodule.sample_rate
-        )
+        kernel_size = int(datamodule.hparams.kernel_length * datamodule.sample_rate)
 
         num_witnesses = len(datamodule.witness_channels)
         sample_input = torch.randn(1, num_witnesses, kernel_size)

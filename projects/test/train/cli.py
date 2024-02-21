@@ -28,7 +28,9 @@ class AframeCLI(LightningCLI):
             apply_on="instantiate",
         )
         parser.link_arguments(
-            "data.freq_low", "model.loss.init_args.freq_low", apply_on="parse"
+            "data.freq_low",
+            "model.loss.init_args.freq_low",
+            apply_on="parse",
         )
         parser.link_arguments(
             "data.freq_high",
@@ -79,18 +81,18 @@ def main(args=None):
         args=args,
     )
 
-    log_dir = cli.trainer.logger.log_dir or cli.trainer.logger.save_dir
-    if not log_dir.startswith("s3://"):
-        os.makedirs(log_dir, exist_ok=True)
-        log_file = os.path.join(log_dir, "train.log")
-        configure_logging(log_file)
-    else:
-        configure_logging()
-    cli.trainer.fit(cli.model, cli.datamodule)
+    # log_dir = cli.trainer.logger.log_dir or cli.trainer.logger.save_dir
+    # if not log_dir.startswith("s3://"):
+    #     os.makedirs(log_dir, exist_ok=True)
+    #     log_file = os.path.join(log_dir, "train.log")
+    #     configure_logging(log_file)
+    # else:
+    #     configure_logging()
+    # cli.trainer.fit(cli.model, cli.datamodule)
 
-    cli.trainer.fit(cli.model, cli.datamodule)
-    if cli.datamodule.hparams.test_duration > 0:
-        cli.trainer.test(cli.model, cli.datamodule)
+    # cli.trainer.fit(cli.model, cli.datamodule)
+    # if cli.datamodule.hparams.test_duration > 0:
+    #     cli.trainer.test(cli.model, cli.datamodule)
 
 
 if __name__ == "__main__":

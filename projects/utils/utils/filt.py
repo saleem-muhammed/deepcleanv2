@@ -98,7 +98,7 @@ def normalize_frequencies(
 
 def get_filt_coeffs(freq_low, freq_high, sample_rate, output="ba", order=8):
     coeffs = []
-    for Wn in zip([freq_low], [freq_high]):
+    for Wn in zip(freq_low, freq_high):
         coeff = signal.butter(
             order, Wn, btype="bandpass", fs=sample_rate, output=output
         )

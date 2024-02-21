@@ -1,4 +1,5 @@
 import h5py
+import os
 
 # DeepCleanCLI
 import torch
@@ -67,7 +68,7 @@ t_dataset = dc_dataset(
 # print(t_dataset.strain_channel)
 # print(t_dataset.witness_channels)
 # print(t_dataset.num_witnesses)
-print(t_dataset.kernel_size)
+# print(t_dataset.kernel_size)
 
 # t_dataset.load_timeseries("train")
 
@@ -149,18 +150,19 @@ def main(args=None):
         seed_everything_default=23984,
         run=False,
         parser_kwargs={"default_env": True},
-        save_config_kwargs={"overwite": True},
+        save_config_kwargs={"overwrite": True},
         args=args,
     )
 
-    # log_dir = tcli.trainer.logger.log_dir or tcli.trainer.logger.save_dir
-    # if not log_dir.startswith("s3://"):
-    #     os.makedirs(log_dir, exist_ok=True)
-    #     log_file = os.path.join(log_dir, "train.log")
-    #     configure_logging(log_file)
-    # else:
-    #     configure_logging()
-    # # tcli.trainer.fit(tcli.model, tcli.datamodule)
+    print(tcli.trainer.logger.log_dir)
+    log_dir = tcli.trainer.logger.log_dir or tcli.trainer.logger.save_dir
+    if not log_dir.startswith("s3://"):
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = os.path.join(log_dir, "train.log")
+        configure_logging(log_file)
+    else:
+        configure_logging()
+    # tcli.trainer.fit(tcli.model, tcli.datamodule)
 
     # tcli.trainer.fit(tcli.model, tcli.datamodule)
     # if tcli.datamodule.hparams.test_duration > 0:

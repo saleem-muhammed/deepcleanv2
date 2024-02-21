@@ -1,5 +1,9 @@
 #!/bin/bash
 
+export DEEPCLEAN_CONTAINER_ROOT=~/images/deepclean
+export DATA_DIR=~/dc-demo/data
+export RESULTS_DIR=~/dc-demo/results
+
 #export DEEPCLEAN_IFO=H1
 #export DEEPCLEAN_IFO=L1
 export DEEPCLEAN_IFO=K1

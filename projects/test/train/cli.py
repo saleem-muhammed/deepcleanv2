@@ -81,13 +81,13 @@ def main(args=None):
         args=args,
     )
 
-    # log_dir = cli.trainer.logger.log_dir or cli.trainer.logger.save_dir
-    # if not log_dir.startswith("s3://"):
-    #     os.makedirs(log_dir, exist_ok=True)
-    #     log_file = os.path.join(log_dir, "train.log")
-    #     configure_logging(log_file)
-    # else:
-    #     configure_logging()
+    log_dir = cli.trainer.logger.log_dir or cli.trainer.logger.save_dir
+    if not log_dir.startswith("s3://"):
+        os.makedirs(log_dir, exist_ok=True)
+        log_file = os.path.join(log_dir, "train.log")
+        configure_logging(log_file)
+    else:
+        configure_logging()
     # cli.trainer.fit(cli.model, cli.datamodule)
 
     # cli.trainer.fit(cli.model, cli.datamodule)

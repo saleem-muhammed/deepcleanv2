@@ -164,9 +164,9 @@ def main(args=None):
         configure_logging()
     # tcli.trainer.fit(tcli.model, tcli.datamodule)
 
-    # tcli.trainer.fit(tcli.model, tcli.datamodule)
-    # if tcli.datamodule.hparams.test_duration > 0:
-    #     tcli.trainer.test(tcli.model, tcli.datamodule)
+    tcli.trainer.fit(tcli.model, tcli.datamodule)
+    if tcli.datamodule.hparams.test_duration > 0:
+        tcli.trainer.test(tcli.model, tcli.datamodule)
 
 
 if __name__ == "__main__":

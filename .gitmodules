@@ -1,3 +1,6 @@
+[submodule "microservice"]
+	path = microservice
+	url = git@github.com:agoodmanjerry/DeepClean.git
 [submodule "toolbox"]
 	path = toolbox
-	url = git@github.com:alecgunny/mono-submodule.git
+	url = git@github.com:agoodmanjerry/deepclean-toolbox.git

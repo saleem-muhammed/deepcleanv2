@@ -96,6 +96,7 @@ Find a node with some decently-sized GPUs, ensure that the one you want isn't be
 
 ```bash
 export GPU_INDEX=0  # or whichever you want
+export DEEPCLEAN_IFO='L1'
 poetry run law run deepclean.tasks.Train  \
     --image train.sif \
     --gpus $GPU_INDEX \

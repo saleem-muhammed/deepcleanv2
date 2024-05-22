@@ -1,4 +1,3 @@
-```
 ## Running Training (without Luigi)
 After cloning this repo into local computer, please checkout to the branch `main`.
 ```

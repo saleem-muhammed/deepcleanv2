@@ -20,10 +20,12 @@ model:
   patience: 20
 data:
   # loading args
-  fname: "/home/kamalan/dc-demo/data/K-K1_lldata-1369291863-16384.hdf5"
+  fname: "/home/kamalan/dc-demo/data/L-L1_lldata-1369291863-16384.hdf5"
   channels:
     [
-      "K1:CAL-CS_PROC_DARM_STRAIN_DBL_DQ",
+      "L1:GDS-CALIB_STRAIN",
+      "L1:PEM-CS_MAINSMON_EBAY_1_DQ",
+      # "K1:CAL-CS_PROC_DARM_STRAIN_DBL_DQ",
       # "K1:PEM-MIC_BS_FIELD_BS_Z_OUT_DQ",
       # "K1:PEM-MIC_BS_BOOTH_BS_Z_OUT_DQ",
       # "K1:PEM-MIC_BS_TABLE_POP_Z_OUT_DQ",
@@ -33,17 +35,17 @@ data:
       # "K1:PEM-MIC_OMC_BOOTH_OMC_Z_OUT_DQ",
       # "K1:PEM-MIC_OMC_TABLE_AS_Z_OUT_DQ",
       # "K1:PEM-MIC_TMSX_TABLE_TMS_Z_OUT_DQ",
-      "K1:PEM-VOLT_AS_TABLE_GND_OUT_DQ",
-      "K1:PEM-VOLT_IMCREFL_TABLE_GND_OUT_DQ",
-      "K1:PEM-VOLT_ISS_TABLE_GND_OUT_DQ",
-      "K1:PEM-VOLT_OMC_CHAMBER_GND_OUT_DQ",
-      "K1:PEM-VOLT_PSL_TABLE_GND_OUT_DQ",
-      "K1:PEM-VOLT_REFL_TABLE_GND_OUT_DQ",
+      # "K1:PEM-VOLT_AS_TABLE_GND_OUT_DQ", 
+      # "K1:PEM-VOLT_IMCREFL_TABLE_GND_OUT_DQ",
+      # "K1:PEM-VOLT_ISS_TABLE_GND_OUT_DQ",
+      # "K1:PEM-VOLT_OMC_CHAMBER_GND_OUT_DQ",
+      # "K1:PEM-VOLT_PSL_TABLE_GND_OUT_DQ",
+      # "K1:PEM-VOLT_REFL_TABLE_GND_OUT_DQ",
     ]
-  train_duration: 4096
-  test_duration: 8192
-  train_stride: 0.0625
-  valid_frac: 0.33
+  train_duration: 2048
+  test_duration: 2048
+  train_stride: 0.25
+  valid_frac: 0.2
   inference_sampling_rate: 64
   start_offset: 0
 
@@ -54,9 +56,12 @@ data:
   freq_low: [55]
   freq_high: [65]
 optimizer:
-  lr: 0.25
+  lr: 1e-3
+  weight_decay: 1e-5
 lr_scheduler:
-  pct_start: 0.33
+  # pct_start: 0.33
+  step_size: 10
+  gamma: 0.1
 trainer:
   # by default, use a local CSV logger.
   # Options in train task for using a
@@ -64,7 +69,7 @@ trainer:
   logger:
     - class_path: lightning.pytorch.loggers.CSVLogger
       init_args:
-        save_dir: "/home/kamalan/dc-demo/results/test-run"
+        save_dir: "/home/kamalan/dc-demo/results/dev"
         flush_logs_every_n_steps: 10
   # devices:
   # strategy: set to ddp if len(devices) > 1
@@ -72,7 +77,7 @@ trainer:
   # now because our convolutions aren't really large enough
   # precision: 16-mixed
   accelerator: auto
-  max_epochs: 100
+  max_epochs: 20
   check_val_every_n_epoch: 1
   log_every_n_steps: 20
   benchmark: true

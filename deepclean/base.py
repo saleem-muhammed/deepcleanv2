@@ -31,6 +31,7 @@ class DeepCleanSandbox(singularity.SingularitySandbox):
 
         return volumes
 
+
 class DeepCleanTask(law.SandboxTask):
     image = luigi.Parameter()
     dev = luigi.BoolParameter(default=False)
@@ -81,6 +82,7 @@ class DeepCleanTask(law.SandboxTask):
 
         if self.gpus:
             env["CUDA_VISIBLE_DEVICES"] = self.gpus
+        env["HDF5_USE_FILE_LOCKING"] = "FALSE"
         return env
 
     @property

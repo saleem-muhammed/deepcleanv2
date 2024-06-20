@@ -55,7 +55,7 @@ command = [
     "python",
     "./training.py",
     "--config",
-    "./config-test.yaml",
+    "./config-O3.yaml",
 ]
 
 

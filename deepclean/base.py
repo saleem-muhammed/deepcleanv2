@@ -29,9 +29,6 @@ class DeepCleanSandbox(singularity.SingularitySandbox):
             if os.path.exists(dir):
                 volumes[dir] = dir
 
-        print("---- IN HERE --- ")
-        print("----- volumes",volumes)
-
         return volumes
 
 class DeepCleanTask(law.SandboxTask):

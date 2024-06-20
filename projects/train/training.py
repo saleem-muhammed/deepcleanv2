@@ -25,7 +25,8 @@ class DeepCleanCLI(LightningCLI):
         parser.add_argument("--verbose", type=bool, default=False)
 
         parser.add_optimizer_args(torch.optim.Adam)
-        parser.add_lr_scheduler_args(torch.optim.lr_scheduler.OneCycleLR)
+        # parser.add_lr_scheduler_args(torch.optim.lr_scheduler.OneCycleLR)
+        parser.add_lr_scheduler_args(torch.optim.lr_scheduler.StepLR)
 
         parser.link_arguments(
             "data.num_witnesses",
@@ -73,13 +74,33 @@ class DeepCleanCLI(LightningCLI):
         )
 
         # link optimizer and scheduler args
+        # parser.link_arguments(
+        #     "data.steps_per_epoch",
+        #     "lr_scheduler.steps_per_epoch",
+        #     apply_on="instantiate",
+        # )
+        # parser.link_arguments("optimizer.lr", "lr_scheduler.max_lr")
+        # parser.link_arguments("trainer.max_epochs", "lr_scheduler.epochs")
         parser.link_arguments(
-            "data.steps_per_epoch",
-            "lr_scheduler.steps_per_epoch",
-            apply_on="instantiate",
+            "optimizer.lr",
+            "optimizer.lr",
+            # apply_on="instantiate",
         )
-        parser.link_arguments("optimizer.lr", "lr_scheduler.max_lr")
-        parser.link_arguments("trainer.max_epochs", "lr_scheduler.epochs")
+        parser.link_arguments(
+            "optimizer.weight_decay",
+            "optimizer.weight_decay",
+            # apply_on="instantiate",
+        )
+        parser.link_arguments(
+            "lr_scheduler.step_size",
+            "lr_scheduler.step_size",
+            # apply_on="instantiate",
+        )
+        parser.link_arguments(
+            "lr_scheduler.gamma",
+            "lr_scheduler.gamma",
+            # apply_on="instantiate",
+        )
 
 def main(args=None):
     tcli = DeepCleanCLI(

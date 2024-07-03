@@ -14,65 +14,30 @@ import logging
 from ml4gw.transforms import ChannelWiseScaler
 
 from utils.filt import BandpassFilter
-from clean.frames import LiveDataBuffer, FrameCrawler, Path
+from clean.frames import  FrameCrawler, Path, Buffer, frame_it
 from clean.data import DeepCleanInferenceDataset
 from clean.infer import OnlineInference
 
 ## all the paramters go here (will be taken from the config file)
 
+# model parameters
 path_to_model = "../test/test_run/lightning_logs/version_0/checkpoints/last.ckpt"
-
-"""
-LiveDataBuffer
-        self.crawler = crawler
-        self.channels = channels
-        self.sample_rate: float = 4096
-        self.edge_duration: float = 1
-        self.target_duration: float = 1
-        self.analysis_duration
-
-DeepCleanInferenceDataset
-        hoft_dir: str,
-        witness_dir: str,
-        channels: list[str],
-        kernel_length: float,
-        freq_low: list[float],
-        freq_high: list[float],
-        batch_size: int,
-        clean_stride: float,
-        sample_rate: float,
-        inference_sampling_rate: float,
-        start_offset: float = 0,
-        filt_order: float = 8, 
-        
-
-"""
-
-
-
-#print (help(DeepClean.load_from_checkpoint))
-
-model = DeepClean.load_from_checkpoint(
-    path_to_model, 
-    arch=Autoencoder(num_witnesses=21, 
-            hidden_channels=[8,16,32,64]),
-    loss=PsdRatio(sample_rate = 4096,
-            fftlength = 2,
-            freq_low = [55],
-            freq_high = [65]),
-    metric=OnlinePsdRatio(inference_sampling_rate= 64,
-            edge_pad= 0.25,
-            filter_pad= 0.5,
-            sample_rate= 4096,
-            bandpass= BandpassFilter([55], [65], 4096, 8),
-            y_scaler= ChannelWiseScaler()),
-    patience=None,
-    save_top_k_models=10,
-)
-
+num_witnesses=21 
+hidden_channels=[8,16,32,64]
+sample_rate = 4096
+fftlength = 2
+freq_low = [55]
+freq_high = [65]
+filt_order = 8
+inference_sampling_rate= 1
+edge_pad= 0.25
+filter_pad= 0.5
+device = "cuda"
 
 hoft_dir = "/home/muhammed.saleem/deepClean/deepclean/O3_60Hz/H1/pseudo_replay/llhoft/"
 witness_dir = "/home/muhammed.saleem/deepClean/deepclean/O3_60Hz/H1/pseudo_replay/lldetchar/"
+
+outdir = './outdir/cleaned_frames'
 
 channels = ["H1:GDS-CALIB_STRAIN_CLEAN",
             "H1:PEM-CS_MAINSMON_EBAY_1_DQ",
@@ -97,33 +62,50 @@ channels = ["H1:GDS-CALIB_STRAIN_CLEAN",
            "H1:ASC-CSOFT_P_INMON",
            "H1:ASC-CSOFT_Y_INMON"]
 
+###############     
+model = DeepClean.load_from_checkpoint(
+    path_to_model, 
+    arch=Autoencoder(num_witnesses=num_witnesses, 
+            hidden_channels=hidden_channels),
+    loss=PsdRatio(sample_rate = sample_rate,
+            fftlength = fftlength,
+            freq_low = freq_low,
+            freq_high = freq_high),
+    metric=OnlinePsdRatio(inference_sampling_rate= inference_sampling_rate,
+            edge_pad= edge_pad,
+            filter_pad= filter_pad,
+            sample_rate= sample_rate,
+            bandpass= BandpassFilter(freq_low, freq_high, sample_rate, filt_order),
+            y_scaler= ChannelWiseScaler()),
+    patience=None,
+    save_top_k_models=10,
+)
+
+
 inference_dataset = DeepCleanInferenceDataset(
         hoft_dir = hoft_dir,
         witness_dir = witness_dir,
         channels = channels,
-        kernel_length = 3.0,
-        freq_low = [55],
-        freq_high = [65],
-        batch_size = 1,
-        clean_stride = 1,
-        sample_rate = 4096.0,
-        inference_sampling_rate = 1,
-        start_offset = 0,
-        filt_order = 8)
-
-        
-
-device = "cuda"
-online_inference = OnlineInference(
-        dataset = inference_dataset,
-        model = model,
-        outdir = './outdir/cleaned_frames',
+        freq_low = freq_low,
+        freq_high = freq_high,
+        sample_rate = sample_rate,
+        filt_order = filt_order,
         device = device)
 
 
-for k in range(200):
+
+
+online_inference = OnlineInference(
+        dataset = inference_dataset,
+        model  = model,
+        outdir = outdir,
+        device = device)
+
+
+for k in range(100):
     online_inference.predict_and_write()
     inference_dataset.update()
+    #print(f"iteration {k}")
     
 
 
@@ -137,5 +119,6 @@ for k in range(200):
 #detchar_buffer = LiveDataBuffer(crawler=crawler_detchar, channels=channels[1:])
 #detchar_buffer.update()
 #pickle.dump(detchar_buffer.data, open("detchar_buffer.pickle", "wb"))
+
 
 

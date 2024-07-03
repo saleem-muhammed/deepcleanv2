@@ -237,7 +237,8 @@ def read_channel(fname: Union[str, Path], channel: str):
             if str(e) == (
                 "Cannot generate TimeSeries with 2-dimensional data"
             ):
-                logger.warning(
+                #logger.warning
+                print (
                     "Channel {} from file {} got corrupted and was "
                     "read as 2D, attempting reread {}".format(
                         channel, fname, i + 1
@@ -249,7 +250,8 @@ def read_channel(fname: Union[str, Path], channel: str):
                 raise
         except RuntimeError as e:
             if str(e).startswith("Failed to read the core"):
-                logger.warning(
+                #logger.warning
+                print (
                     "Channel {} from file {} had corrupted header, "
                     "attempting reread {}".format(channel, fname, i + 1)
                 )
@@ -259,7 +261,8 @@ def read_channel(fname: Union[str, Path], channel: str):
                 raise
 
         if len(x) != x.sample_rate.value:
-            logger.warning(
+            #logger.warning
+            print (
                 "Channel {} in file {} got corrupted with "
                 "length {}, attempting reread {}".format(
                     channel, fname, len(x), i + 1
@@ -376,6 +379,9 @@ class Buffer:
 
             # create a half Hann window for tapering
             # data in and out when frames are missing
+            # also this is used at the start and end of 
+            # every 3 sec segment before being resampled
+             
             fs = int(self.sample_rate)
             self.taper = hann(2 * fs)[:fs]
             return
@@ -403,13 +409,26 @@ class Buffer:
         dur = len(self.x) / self.sample_rate
         if dur >= 3:
             length = int(dur * self.target_sample_rate)
+
+            # tapering the start and end of the 3 sec segment 
+            # to avoid any edge effect while doing the resampling
+            #  
+            #x = self.x[:len(self.taper)] * self.taper
+            #x = x[-len(self.taper) :] * self.taper[::-1]
+            # commented out as the resample function is already doing the tapering
+            
+            # resample to the target rate
             x = resample(self.x, length, window="hann")
+            #x = resample(self.x, length, window="boxcar")
+
+            # the below line was written for a sanity test
+            #x = 1.0*(self.x) 
 
             # slice out the middle second of our buffer
             # to return, then cut off the earliest second
             # that we no longer need
             size = int(self.target_sample_rate)
-            x = x[-2 * size : -size]
+            #x = x[-2 * size : -size]
             self.x = self.x[int(self.sample_rate) :]
             return x
 
@@ -418,7 +437,8 @@ class Buffer:
         return None
 
 
-def frame_it(fname_it, channels: Iterable[str], sample_rate: float):
+
+def frame_it(hoft_crawler, witness_crawler, channels: Iterable[str], sample_rate: float):
     """
     Load frames from the filenames returned by an
     iterator, using a 3 second buffer to reduce
@@ -433,22 +453,25 @@ def frame_it(fname_it, channels: Iterable[str], sample_rate: float):
     fname_buffer = None
 
     i = 0
-    for witness_fname, strain_fname in fname_it:
+    for strain_fname, witness_fname in zip(hoft_crawler, witness_crawler):
         if i < 2:
             i += 1
             continue
 
         if not witness_fname.exists():
-            logger.warning(
+            #logger.warning
+            print(
                 "Witness frame {} was dropped, attempting "
                 "to load corresponding strain frame {}".format(
                     witness_fname, strain_fname
                 )
             )
         else:
-            logger.debug(
-                f"Loading frame files {witness_fname}, {strain_fname}"
-            )
+            #logger.debug
+            #print(
+            #    f"Loading frame files {witness_fname}, {strain_fname}"
+            #)
+            pass 
 
         y = buffers[strain].update(strain_fname, strain)
         X = []
@@ -471,6 +494,7 @@ def frame_it(fname_it, channels: Iterable[str], sample_rate: float):
         # update our strain filename buffer to
         # represent the current filename
         fname_buffer = strain_fname
+
 
 
 @dataclass

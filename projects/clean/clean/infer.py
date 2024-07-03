@@ -29,6 +29,8 @@ class OnlineInference:
         self.device = device
         self.dataset = dataset
         self.outdir = outdir
+        self.edge2crop = int(1.0* self.dataset.hparams.sample_rate)
+
         if not os.path.exists(outdir):
             os.makedirs(self.outdir)
         
@@ -40,12 +42,10 @@ class OnlineInference:
         self.noise = self.model.metric.y_scaler(self.pred, reverse=True)
         self.noise = self.model.metric.bandpass(self.noise.cpu().detach().numpy())
         self.noise = torch.tensor(self.noise, device=self.device).flatten()
-        start = self.model.metric.filter_pad
-        stop = -self.model.metric.filter_pad
-        self.noise = self.noise[start:stop]
+        self.noise = self.noise[self.edge2crop:-self.edge2crop]
         self.raw = list(self.dataset.y_inference)[0].to(self.device).flatten()
         self.raw = self.model.metric.y_scaler(self.raw, reverse=True)
-        self.raw = self.raw[start:stop]
+        self.raw = self.raw[self.edge2crop:-self.edge2crop]
 
     def write(self):
         cleaned = self.raw - self.noise
@@ -57,6 +57,7 @@ class OnlineInference:
         filepath = os.path.join(self.outdir, fname)
         ts.write(filepath)
         self.__logger.info(f"Data written to file: {filepath}")
+        print(f"Writing cleaned frame {filepath}")
         
         
     def predict_and_write(self):

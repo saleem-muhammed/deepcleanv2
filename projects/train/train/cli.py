@@ -86,11 +86,17 @@ def main(args=None):
         configure_logging(log_file)
     else:
         configure_logging()
-    cli.trainer.fit(cli.model, cli.datamodule)
 
     cli.trainer.fit(cli.model, cli.datamodule)
     if cli.datamodule.hparams.test_duration > 0:
+        weights = torch.load(cli.trainer.checkpoint_callback.best_model_path)
+        cli.model.load_state_dict(weights["state_dict"])
         cli.trainer.test(cli.model, cli.datamodule)
+
+    for i in ["X", "y"]:
+        name = f"{i}_scaler"
+        module = getattr(cli.datamodule, name)
+        torch.save(module.state_dict(), os.path.join(log_dir, f"{name}.pt"))
 
 
 if __name__ == "__main__":

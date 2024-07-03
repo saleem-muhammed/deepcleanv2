@@ -1,4 +1,5 @@
 import os
+import re
 
 import h5py
 import torch
@@ -10,6 +11,10 @@ from utils.plotting.utils import save
 
 
 class PsdPlotter(Callback):
+    def __init__(self, plots: dict[str, str], *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._plots = plots
+
     def on_fit_start(self, trainer, pl_module):
         log_dir = trainer.logger.log_dir or trainer.logger.save_dir
 
@@ -32,8 +37,17 @@ class PsdPlotter(Callback):
 
             key = os.path.basename(fname).split("-")[0]
             html = wandb.Html(fname)
+
+            step = re.search(r"(?<=step-)[0-9]+(?=\.html$)", fname)
+            if step is None:
+                key = "test"
+            else:
+                key = str(int(step.group()))
+
+            self._plots[key] = html
+            data = [(k, v) for k, v in self._plots.items()]
             trainer.logger.log_table(
-                "samples", columns=[f"{key}-psds"], data=[[html]]
+                "samples", columns=["step", "psds"], data=data
             )
 
     def _shared_eval(self, pl_module):

@@ -19,7 +19,7 @@ class Train(DeepCleanTask):
     def make_name(self):
         problems = "_".join([i.value for i in self.cfg.problem])
         return "{}-{}-{}".format(
-            self.cfg.ifo, problems, self.output().parent.basename
+            self.cfg.ifo.name, problems, self.output().parent.basename
         )
 
     def configure_wandb(self, command: list[str]) -> None:

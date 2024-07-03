@@ -26,6 +26,7 @@ class DeepClean(pl.LightningModule):
         self.loss = loss
         self.metric = metric
         self.metric.loss_fn = self.loss
+        self._plots = {}
 
     def forward(self, X: Tensor) -> Tensor:
         return self.model(X)
@@ -65,7 +66,7 @@ class DeepClean(pl.LightningModule):
     def configure_callbacks(self) -> list[pl.Callback]:
         # first callback actually computes all of our
         # validation metrics and any associated plots
-        callbacks = [PsdPlotter()]
+        callbacks = [PsdPlotter(self._plots)]
 
         # then tack on a checkpointer that uses these
         # metrcis for checkpointing the model
@@ -74,7 +75,8 @@ class DeepClean(pl.LightningModule):
             save_top_k=self.hparams.save_top_k_models,
             save_last=True,
             auto_insert_metric_name=False,
-            mode="max",
+            mode="min",
+            save_on_train_epoch_end=False,
         )
         callbacks.append(checkpoint)
 

@@ -53,9 +53,9 @@ def stream_command(command: list[str]):
 
 command = [
     "python",
-    "./try_train.py",
+    "./training.py",
     "--config",
-    "./config-test.yaml",
+    "./config-O3.yaml",
 ]
 
 

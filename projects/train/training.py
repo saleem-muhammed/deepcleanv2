@@ -20,6 +20,7 @@ from train.callbacks import ModelCheckpoint, PsdPlotter
 
 
 # Set the DeepCelanCLI
+
 class DeepCleanCLI(LightningCLI):
     def add_arguments_to_parser(self, parser):
         parser.add_argument("--verbose", type=bool, default=False)

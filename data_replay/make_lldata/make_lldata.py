@@ -38,9 +38,22 @@ def main():
     destination = args.destination
     tag = args.tag
 
-    f_list = glob.glob(f'{source}/*.gwf')
-    ch_list = utils.frtools.get_channels(f_list[0])
+    # f_list = glob.glob(f'{source}/*.gwf')
+    f_list = source
+    ch_list = utils.frtools.get_channels(f_list)
 
+    if ifo == 'H1' or ifo == 'L1':
+        strain_ch = f"{ifo}:GDS-CALIB_STRAIN"
+    if tag == 'llhoft':
+        ch_list = [strain_ch]
+    if tag == 'lldetchar':
+        wit_list = []
+        for ch in ch_list:
+            if ch != strain_ch:
+                wit_list.append(ch)
+
+        ch_list = wit_list
+    print(ch_list)
     duration = end - start
     if duration <= 4096:
         make_ll_gwf(

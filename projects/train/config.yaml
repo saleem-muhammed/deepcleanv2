@@ -22,8 +22,8 @@ data:
   # loading args
   # fname:
   # channels: []
-  train_duration: 4096
-  test_duration: 8192
+  train_duration: 512
+  test_duration: 512
   train_stride: 0.25
   valid_frac: 0.1
   inference_sampling_rate: 4

@@ -3,11 +3,11 @@ import torch
 from gwpy.timeseries import TimeSeries
 import logging
 
-from train.model import DeepClean
-from train.architectures import Autoencoder
-from train.metrics import OnlinePsdRatio
-from ml4gw.transforms import ChannelWiseScaler
-from utils.filt import BandpassFilter
+#from train.model import DeepClean
+#from train.architectures import Autoencoder
+#from train.metrics import OnlinePsdRatio
+#from ml4gw.transforms import ChannelWiseScaler
+#from utils.filt import BandpassFilter
 from clean.data import DeepCleanInferenceDataset
 
 
@@ -23,10 +23,12 @@ class OnlineInference:
         - writes the cleaned frames   
     """
 
-    def __init__(self, dataset, model, outdir, device):
+    def __init__(self, dataset, model, y_scaler, bandpass, outdir, device):
         self.__logger = logging.getLogger("DeepClean Online Inference")
         self.model = model
         self.device = device
+        self.y_scaler = y_scaler
+        self.bandpass = bandpass
         self.dataset = dataset
         self.outdir = outdir
         self.edge2crop = int(1.0* self.dataset.hparams.sample_rate)
@@ -39,13 +41,14 @@ class OnlineInference:
         self.pred = self.model(witness.to(self.device))
 
     def postprocess(self):
-        self.noise = self.model.metric.y_scaler(self.pred, reverse=True)
-        self.noise = self.model.metric.bandpass(self.noise.cpu().detach().numpy())
+        self.noise = self.y_scaler(self.pred.cpu(), reverse=True)
+        self.noise = self.bandpass(self.noise.cpu().detach().numpy())
         self.noise = torch.tensor(self.noise, device=self.device).flatten()
         self.noise = self.noise[self.edge2crop:-self.edge2crop]
-        self.raw = list(self.dataset.y_inference)[0].to(self.device).flatten()
-        self.raw = self.model.metric.y_scaler(self.raw, reverse=True)
-        self.raw = self.raw[self.edge2crop:-self.edge2crop]
+        self.raw   = list(self.dataset.y_inference)[0].to(self.device).flatten()
+        self.raw   = self.y_scaler(self.raw.cpu(), reverse=True)
+        self.raw   = self.raw[self.edge2crop:-self.edge2crop]
+        self.raw   = self.raw.to(self.device)  
 
     def write(self):
         cleaned = self.raw - self.noise

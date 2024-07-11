@@ -3,6 +3,7 @@ import numpy as np
 import pickle 
 from  gwpy.timeseries import TimeSeries
 import os
+import torch
 
 from train.model import DeepClean
 from train.architectures import Autoencoder
@@ -20,19 +21,34 @@ from clean.infer import OnlineInference
 
 ## all the paramters go here (will be taken from the config file)
 
-# model parameters
-path_to_model = "../test/test_run/lightning_logs/version_0/checkpoints/last.ckpt"
+device = "cuda"
 num_witnesses=21 
-hidden_channels=[8,16,32,64]
 sample_rate = 4096
-fftlength = 2
 freq_low = [55]
 freq_high = [65]
 filt_order = 8
-inference_sampling_rate= 1
-edge_pad= 0.25
-filter_pad= 0.5
-device = "cuda"
+
+# model parameters
+model_repo = "../../myprojects/60Hz-O3-MDC/results/lightning_logs/version_8/"
+model    = torch.jit.load(os.path.join(model_repo, "model.pt")).to(device)
+
+y_scaler = ChannelWiseScaler()
+y_scaler.load_state_dict(
+    torch.load(os.path.join(model_repo, "y_scaler.pt")))
+
+X_scaler = ChannelWiseScaler(num_witnesses)
+X_scaler.load_state_dict(
+    torch.load(os.path.join(model_repo, "X_scaler.pt")))
+
+bandpass= BandpassFilter(freq_low, freq_high, sample_rate, filt_order)
+
+
+#hidden_channels=[8,16,32,64]
+#fftlength = 2
+#inference_sampling_rate= 1
+#edge_pad= 0.25
+#filter_pad= 0.5
+#device = "cuda"
 
 hoft_dir = "/home/muhammed.saleem/deepClean/deepclean/O3_60Hz/H1/pseudo_replay/llhoft/"
 witness_dir = "/home/muhammed.saleem/deepClean/deepclean/O3_60Hz/H1/pseudo_replay/lldetchar/"
@@ -62,24 +78,7 @@ channels = ["H1:GDS-CALIB_STRAIN_CLEAN",
            "H1:ASC-CSOFT_P_INMON",
            "H1:ASC-CSOFT_Y_INMON"]
 
-###############     
-model = DeepClean.load_from_checkpoint(
-    path_to_model, 
-    arch=Autoencoder(num_witnesses=num_witnesses, 
-            hidden_channels=hidden_channels),
-    loss=PsdRatio(sample_rate = sample_rate,
-            fftlength = fftlength,
-            freq_low = freq_low,
-            freq_high = freq_high),
-    metric=OnlinePsdRatio(inference_sampling_rate= inference_sampling_rate,
-            edge_pad= edge_pad,
-            filter_pad= filter_pad,
-            sample_rate= sample_rate,
-            bandpass= BandpassFilter(freq_low, freq_high, sample_rate, filt_order),
-            y_scaler= ChannelWiseScaler()),
-    patience=None,
-    save_top_k_models=10,
-)
+
 
 
 inference_dataset = DeepCleanInferenceDataset(
@@ -89,14 +88,17 @@ inference_dataset = DeepCleanInferenceDataset(
         freq_low = freq_low,
         freq_high = freq_high,
         sample_rate = sample_rate,
+        y_scaler = y_scaler,
+        X_scaler = X_scaler,
         filt_order = filt_order,
         device = device)
-
 
 
 online_inference = OnlineInference(
         dataset = inference_dataset,
         model  = model,
+        y_scaler = y_scaler, 
+        bandpass = bandpass, 
         outdir = outdir,
         device = device)
 
@@ -111,13 +113,38 @@ for k in range(100):
 
 
 
-#hoft_buffer = LiveDataBuffer(crawler=crawler_hoft, channels=channels[:1])
-#hoft_buffer.update()
-#pickle.dump(hoft_buffer.data, open("hoft_buffer.pickle", "wb"))
 
-#detchar_buffer = LiveDataBuffer(crawler=crawler_detchar, channels=channels[1:])
-#detchar_buffer.update()
-#pickle.dump(detchar_buffer.data, open("detchar_buffer.pickle", "wb"))
+######
+
+# loss=PsdRatio(sample_rate = sample_rate,
+#         fftlength = fftlength,
+#         freq_low = freq_low,
+#         freq_high = freq_high)
+
+# metric=OnlinePsdRatio(inference_sampling_rate= inference_sampling_rate,
+#         edge_pad= edge_pad,
+#         filter_pad= filter_pad,
+#         sample_rate= sample_rate,
+#         bandpass= BandpassFilter(freq_low, freq_high, sample_rate, filt_order),
+#         y_scaler= y_scaler)
 
 
+
+# model = DeepClean.load_from_checkpoint(
+#     last_model_path, 
+#     arch=Autoencoder(num_witnesses=num_witnesses, 
+#             hidden_channels=hidden_channels),
+#     loss=PsdRatio(sample_rate = sample_rate,
+#             fftlength = fftlength,
+#             freq_low = freq_low,
+#             freq_high = freq_high),
+#     metric=OnlinePsdRatio(inference_sampling_rate= inference_sampling_rate,
+#             edge_pad= edge_pad,
+#             filter_pad= filter_pad,
+#             sample_rate= sample_rate,
+#             bandpass= BandpassFilter(freq_low, freq_high, sample_rate, filt_order),
+#             y_scaler= ChannelWiseScaler()),
+#     patience=None,
+#     save_top_k_models=10,
+# )
 

@@ -28,6 +28,8 @@ class DeepCleanInferenceDataset(pl.LightningDataModule):
         freq_low: list[float],
         freq_high: list[float],
         sample_rate: float,
+        y_scaler: ChannelWiseScaler,
+        X_scaler: ChannelWiseScaler,
         batch_size: int = 1,
         clean_stride: float = 1,
         kernel_length: float = 3,
@@ -36,19 +38,18 @@ class DeepCleanInferenceDataset(pl.LightningDataModule):
     ):
         super().__init__()
         self.__logger = logging.getLogger("DeepClean Dataset")
-        self.save_hyperparameters()
-
+        self.save_hyperparameters(ignore=['y_scaler', 'X_scaler'])
 
         self.stride = int(clean_stride * self.hparams.sample_rate)
 
         # create some modules we'll use for pre/postprocessing
-        self.X_scaler = ChannelWiseScaler(len(self.witness_channels))
-        self.y_scaler = ChannelWiseScaler()
+        self.X_scaler = X_scaler
+        self.y_scaler = y_scaler
+
         self.bandpass = BandpassFilter(
             freq_low, freq_high, self.hparams.sample_rate, filt_order
         )
-        
-        
+                
         self.hoft_crawler    = FrameCrawler (Path(hoft_dir))
         self.witness_crawler = FrameCrawler (Path(witness_dir))
 
@@ -86,8 +87,8 @@ class DeepCleanInferenceDataset(pl.LightningDataModule):
         
         # Normalizing the data
         ## first fit the data to compute the meana nd std
-        self.y_scaler.fit(self.y_inference)
-        self.X_scaler.fit(self.X_inference)
+        #self.y_scaler.fit(self.y_inference)
+        #self.X_scaler.fit(self.X_inference)
         
         ## then normalize them
         self.y_inference = self.y_scaler(self.y_inference)

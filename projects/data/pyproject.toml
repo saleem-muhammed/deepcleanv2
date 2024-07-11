@@ -8,6 +8,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = ">=3.9,<3.11" 
+gwpy = "^3.0.8"
 
 [build-system]
 requires = ["poetry-core"]

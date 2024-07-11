@@ -94,7 +94,6 @@ inference_dataset = DeepCleanInferenceDataset(
 
 
 
-
 online_inference = OnlineInference(
         dataset = inference_dataset,
         model  = model,
@@ -104,7 +103,7 @@ online_inference = OnlineInference(
 
 for k in range(100):
     online_inference.predict_and_write()
-    inference_dataset.update()
+    online_inference.dataset.update()
     #print(f"iteration {k}")
     
 

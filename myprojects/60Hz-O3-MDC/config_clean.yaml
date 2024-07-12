@@ -1,0 +1,6 @@
+device: "cuda"
+sample_rate: 4096
+hoft_dir: "/home/muhammed.saleem/deepClean/deepclean/O3_60Hz/H1/pseudo_replay/llhoft/"
+witness_dir: "/home/muhammed.saleem/deepClean/deepclean/O3_60Hz/H1/pseudo_replay/lldetchar/"
+outdir: './outdir/cleaned_frames'
+train_dir: "../../myprojects/60Hz-O3-MDC/results/lightning_logs/version_8/"

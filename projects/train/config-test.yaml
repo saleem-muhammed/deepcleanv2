@@ -22,11 +22,11 @@ data:
   # loading args
   # fname:
   # channels: []
-  train_duration: 2048
+  train_duration: 1024
   test_duration: 2048
-  train_stride: 0.25
-  valid_frac: 0.1
-  inference_sampling_rate: 4
+  train_stride: 0.0625
+  valid_frac: 0.25
+  inference_sampling_rate: 64
   start_offset: 0
 
   # preprocessing args

@@ -3,11 +3,11 @@ import torch
 from gwpy.timeseries import TimeSeries
 import logging
 
-from train.model import DeepClean
-from train.architectures import Autoencoder
-from train.metrics import OnlinePsdRatio
-from ml4gw.transforms import ChannelWiseScaler
-from utils.filt import BandpassFilter
+#from train.model import DeepClean
+#from train.architectures import Autoencoder
+#from train.metrics import OnlinePsdRatio
+#from ml4gw.transforms import ChannelWiseScaler
+#from utils.filt import BandpassFilter
 from clean.data import DeepCleanInferenceDataset
 
 
@@ -29,29 +29,30 @@ class OnlineInference:
         self.device = device
         self.dataset = dataset
         self.outdir = outdir
-        self.edge2crop = int(1.0* self.dataset.hparams.sample_rate)
+        self.edge2crop = int(1.0* self.model.sample_rate)
 
         if not os.path.exists(outdir):
             os.makedirs(self.outdir)
         
     def predict(self):
         witness = list(self.dataset.X_inference)[0]
-        self.pred = self.model(witness.to(self.device))
+        self.pred = self.model.model(witness.to(self.device))
 
     def postprocess(self):
-        self.noise = self.model.metric.y_scaler(self.pred, reverse=True)
-        self.noise = self.model.metric.bandpass(self.noise.cpu().detach().numpy())
+        self.noise = self.model.y_scaler(self.pred.cpu(), reverse=True)
+        self.noise = self.model.bandpass(self.noise.cpu().detach().numpy())
         self.noise = torch.tensor(self.noise, device=self.device).flatten()
         self.noise = self.noise[self.edge2crop:-self.edge2crop]
-        self.raw = list(self.dataset.y_inference)[0].to(self.device).flatten()
-        self.raw = self.model.metric.y_scaler(self.raw, reverse=True)
-        self.raw = self.raw[self.edge2crop:-self.edge2crop]
+        self.raw   = list(self.dataset.y_inference)[0].to(self.device).flatten()
+        self.raw   = self.model.y_scaler(self.raw.cpu(), reverse=True)
+        self.raw   = self.raw[self.edge2crop:-self.edge2crop]
+        self.raw   = self.raw.to(self.device)  
 
     def write(self):
         cleaned = self.raw - self.noise
         cleaned = cleaned.cpu().numpy()
         gpstime = self.dataset.hoft_crawler.t0 - 1
-        ts = TimeSeries(data=cleaned, t0=gpstime, sample_rate=self.dataset.hparams.sample_rate,
+        ts = TimeSeries(data=cleaned, t0=gpstime, sample_rate=self.model.sample_rate,
                 channel=self.dataset.strain_channel+"_DC", unit='seconds')
         fname = self.dataset.hoft_crawler.file_format.get_name(timestamp=gpstime, length=1)
         filepath = os.path.join(self.outdir, fname)

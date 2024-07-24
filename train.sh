@@ -4,8 +4,8 @@ export DEEPCLEAN_CONTAINER_ROOT=~/images/deepclean
 export DATA_DIR=~/dc-demo/data
 export RESULTS_DIR=~/dc-demo/results
 # GPU Settings
-export CUDA_VISIBLE_DEVICES=2
-export GPU_INDEX=2
+export CUDA_VISIBLE_DEVICES=1
+export GPU_INDEX=1
 export CUDA_LAUNCH_BLOCKING=1
 # Run Training Task
 export DEEPCLEAN_IFO=H1

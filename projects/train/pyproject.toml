@@ -19,6 +19,7 @@ jsonargparse = {version = "^4.17", extras = ["signatures"]}
 # local dependencies
 ml4gw = {path = "../../toolbox/ml4gw", develop = true}
 utils = {path = "../utils", develop = true}
+numpy = "<2.0.0"
 
 [[tool.poetry.source]]
 name = "torch"

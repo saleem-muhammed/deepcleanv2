@@ -9,7 +9,7 @@ python = ">=3.9,<3.12"
 
 # torch libs
 torchmetrics = "^1"
-torchaudio = {version = "2.0.2", source = "torch"}
+torchaudio = {version = "^2", source = "torch"}
 
 # lightning dependencies
 lightning = "^2.0"
@@ -20,7 +20,7 @@ jsonargparse = {version = "^4.17", extras = ["signatures"]}
 ml4gw = {path = "../../toolbox/ml4gw", develop = true}
 utils = {path = "../utils", develop = true}
 train = {path = "../train", develop = true}
-jupyter = "^1.0.0"
+numpy = "<2.0.0"
 sympy = "^1.12"
 gwpy = "^3.0.8"
 lalsuite = "^7.22"
@@ -28,7 +28,7 @@ lalsuite = "^7.22"
 
 [[tool.poetry.source]]
 name = "torch"
-url = "https://download.pytorch.org/whl/cu118"
+url = "https://download.pytorch.org/whl/cu121"
 priority = "explicit"
 
 [tool.poetry.group.dev.dependencies]

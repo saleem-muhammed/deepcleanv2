@@ -1,8 +1,8 @@
 #!/bin/bash
 # Directories
 export DEEPCLEAN_CONTAINER_ROOT=~/images/deepclean
-export DATA_DIR=~/dc-demo/data
-export RESULTS_DIR=~/dc-demo/results
+export DATA_DIR=~/deepclean/data
+export RESULTS_DIR=~/deepclean/results
 # GPU Settings
 export CUDA_VISIBLE_DEVICES=1
 export GPU_INDEX=1

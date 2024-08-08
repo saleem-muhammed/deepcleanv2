@@ -1,0 +1,2 @@
+log_directory: "../../myprojects/60Hz-O3-MDC/cleaned_frames/logs"
+plot_directory: "../../myprojects/60Hz-O3-MDC/cleaned_frames/plots"

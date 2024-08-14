@@ -10,12 +10,12 @@ model:
   loss:
     class_path: train.metrics.PsdRatio
     init_args:
-      fftlength: 2
+      fftlength: 1
       asd: true
   metric:
     class_path: train.metrics.OnlinePsdRatio
     init_args:
-      filter_pad: 0.5
+      filter_pad: 1
       edge_pad: 0.25
   patience: 20
 data:
@@ -31,7 +31,7 @@ data:
 
   # preprocessing args
   batch_size: 512
-  kernel_length: 8
+  kernel_length: 3
   filt_order: 8
   # freq_low: []
   # freq_high: []

@@ -1,108 +1,119 @@
-import h5py
 import numpy as np
-import pickle 
-from  gwpy.timeseries import TimeSeries
+import yaml
+from gwpy.timeseries import TimeSeries, TimeSeriesDict
+import torch
+from glob import glob
 import os
-
-from train.model import DeepClean
-from train.architectures import Autoencoder
-from train.metrics import OnlinePsdRatio, PsdRatio
-from lightning import pytorch as pl
-import logging
+from clean.model import InferenceModel
+from ml4gw.dataloading import InMemoryDataset
 
 
-from ml4gw.transforms import ChannelWiseScaler
-
-from utils.filt import BandpassFilter
-from clean.frames import  FrameCrawler, Path, Buffer, frame_it
-from clean.data import DeepCleanInferenceDataset
-from clean.infer import OnlineInference
 
 ## all the paramters go here (will be taken from the config file)
 
-# model parameters
-path_to_model = "../test/test_run/lightning_logs/version_0/checkpoints/last.ckpt"
-num_witnesses=21 
-hidden_channels=[8,16,32,64]
-sample_rate = 4096
-fftlength = 2
-freq_low = [55]
-freq_high = [65]
-filt_order = 8
-inference_sampling_rate= 1
-edge_pad= 0.25
-filter_pad= 0.5
-device = "cuda"
+clean_config = "/home/muhammed.saleem/deepClean/deepcleanv2/myprojects/60Hz-O3-MDC/config_clean.yaml"
 
-hoft_dir = "/home/muhammed.saleem/deepClean/deepclean/O3_60Hz/H1/pseudo_replay/llhoft/"
-witness_dir = "/home/muhammed.saleem/deepClean/deepclean/O3_60Hz/H1/pseudo_replay/lldetchar/"
+with open(clean_config, 'r') as file:
+        config = yaml.safe_load(file)
 
-outdir = './outdir/cleaned_frames'
+model = InferenceModel(config['train_dir'], config['sample_rate'], config['device'])
 
-channels = ["H1:GDS-CALIB_STRAIN_CLEAN",
-            "H1:PEM-CS_MAINSMON_EBAY_1_DQ",
-            "H1:ASC-INP1_P_INMON",
-            "H1:ASC-INP1_Y_INMON",
-            "H1:ASC-MICH_P_INMON",
-           "H1:ASC-MICH_Y_INMON",
-           "H1:ASC-PRC1_P_INMON",
-           "H1:ASC-PRC1_Y_INMON",
-           "H1:ASC-PRC2_P_INMON",
-           "H1:ASC-PRC2_Y_INMON",
-           "H1:ASC-SRC1_P_INMON",
-           "H1:ASC-SRC1_Y_INMON",
-           "H1:ASC-SRC2_P_INMON",
-           "H1:ASC-SRC2_Y_INMON",
-           "H1:ASC-DHARD_P_INMON",
-           "H1:ASC-DHARD_Y_INMON",
-           "H1:ASC-CHARD_P_INMON",
-           "H1:ASC-CHARD_Y_INMON",
-           "H1:ASC-DSOFT_P_INMON",
-           "H1:ASC-DSOFT_Y_INMON",
-           "H1:ASC-CSOFT_P_INMON",
-           "H1:ASC-CSOFT_Y_INMON"]
-model = DeepClean.load_from_checkpoint(
-    path_to_model, 
-    arch=Autoencoder(num_witnesses=num_witnesses, 
-            hidden_channels=hidden_channels),
-    loss=PsdRatio(sample_rate = sample_rate,
-            fftlength = fftlength,
-            freq_low = freq_low,
-            freq_high = freq_high),
-    metric=OnlinePsdRatio(inference_sampling_rate= inference_sampling_rate,
-            edge_pad= edge_pad,
-            filter_pad= filter_pad,
-            sample_rate= sample_rate,
-            bandpass= BandpassFilter(freq_low, freq_high, sample_rate, filt_order),
-            y_scaler= ChannelWiseScaler()),
-    patience=None,
-    save_top_k_models=10,
+""" Load X_inference as required and resample to the target rate"""
+hoft_files = glob(os.path.join(config['hoft_dir'], "*.gwf"))
+woft_files = glob(os.path.join(config['witness_dir'], "*.gwf"))
+start = 1250919100
+end = start + 8
+
+ts_dict = TimeSeriesDict.read(
+        woft_files, 
+        channels = model.channels[1:], 
+        start=start, end=end)
+
+# Resample each time series to the specified frequency
+resampled_ts_dict = ts_dict.resample(model.sample_rate)
+X_inference = np.column_stack([resampled_ts_dict[channel].value for channel in model.channels[1:]])
+
+''
+
+""" Load y_inference as required and resample to the target rate"""
+
+X_inference = InMemoryDataset(
+        X_inference,
+        kernel_size=8,
+        batch_size=1,
+        stride = 1, 
+        coincident=True,
+        shuffle=False,
+        device = config['device']
+)
+
+y_inference = InMemoryDataset(
+        y_inference,
+        kernel_size=8,
+        batch_size=1,
+        stride = 1, 
+        coincident=True,
+        shuffle=False,
+        device = config['device']
 )
 
 
-inference_dataset = DeepCleanInferenceDataset(
-        hoft_dir = hoft_dir,
-        witness_dir = witness_dir,
-        channels = channels,
-        freq_low = freq_low,
-        freq_high = freq_high,
-        sample_rate = sample_rate,
-        filt_order = filt_order,
-        device = device)
+witness = list(X_inference)[0]
+pred = model.model(witness.to(config['device']))
+edge2crop = int(1.0* model.sample_rate)
+ts_dict = TimeSeriesDict()
+
+noise = model.y_scaler(pred.cpu(), reverse=True)
+noise = model.bandpass(noise.cpu().detach().numpy())
+noise = torch.tensor(noise, device=config['device']).flatten()
+noise = noise[edge2crop:-edge2crop]
+        
+raw   = list(y_inference)[0].to(config['device']).flatten()
+raw   = raw[edge2crop:-edge2crop]
+raw   = raw.to(config['device']) 
+
+cleaned = raw - noise
 
 
-_, y, x = next(inference_dataset.frame_iterator)
-_, y, x = next(inference_dataset.frame_iterator)
+output_t0 = start
+ts = TimeSeries(data=np.array(cleaned.cpu().numpy(), dtype=np.float64), 
+                t0=output_t0, 
+                sample_rate=model.sample_rate,
+                channel="CLEANED", unit='seconds') 
+ts_dict["CLEANED"] = ts
 
-seg1_middle_y = y[4096:-4096]
-seg1_middle_x = x[:,4096:-4096]
+ts_raw = TimeSeries(data=np.array(raw.cpu().numpy(), dtype=np.float64), 
+                t0=output_t0, 
+                sample_rate=model.sample_rate,
+                channel="UNCLEAN", unit='seconds') 
+ts_dict["UNCLEAN"] = ts_raw
 
-_, y, x = next(inference_dataset.frame_iterator)
-seg2_first_y = y[:4096]
-seg2_first_x = x[:,:4096]
 
-diff_y = seg2_first_y - seg1_middle_y
-diff_x = seg2_first_x - seg1_middle_x
+ts_noise = TimeSeries(data=np.array(noise.cpu().numpy(), dtype=np.float64), 
+                t0=output_t0, 
+                sample_rate=model.sample_rate,
+                channel="PRED", unit='seconds') 
+ts_dict["PRED"] = ts_noise
 
-print(min(diff_y), max(diff_y))
-print(min(diff_x.flatten()), max(diff_x.flatten()))
+ts_dict.write("debug.gwf")
+        
+
+
+
+# import pickle 
+# import os
+# import h5py
+
+# from train.model import DeepClean
+# from train.architectures import Autoencoder
+# from train.metrics import OnlinePsdRatio, PsdRatio
+# from lightning import pytorch as pl
+# import logging
+
+
+# from ml4gw.transforms import ChannelWiseScaler
+
+# from utils.filt import BandpassFilter
+# from clean.frames import  FrameCrawler, Path, Buffer, frame_it
+# from clean.data import DeepCleanInferenceDataset
+# from clean.infer import OnlineInference

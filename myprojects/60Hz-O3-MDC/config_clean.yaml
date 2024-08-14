@@ -4,3 +4,8 @@ hoft_dir: "/home/chiajui.chou/ll_data_O4_review/kafka/H1/"
 witness_dir: "/home/chiajui.chou/ll_data_O4_review/lldetchar/H1/"
 outdir: '/home/chiajui.chou/deepcleanv2/myprojects/60Hz-O3-MDC/outdir/cleaned_frames'
 train_dir: "/home/chiajui.chou/deepclean/results/train-O3-H1/lightning_logs/version_1"
+
+# hoft_dir: "/home/muhammed.saleem/deepClean/deepcleanv2/data_replay/tests/H1/llhoft"
+# witness_dir: "/home/muhammed.saleem/deepClean/deepcleanv2/data_replay/tests/H1/lldetchar"
+# outdir: '../../myprojects/60Hz-O3-MDC/cleaned_frames'
+# train_dir: "../../myprojects/60Hz-O3-MDC/results/lightning_logs/version_8/"

@@ -14,8 +14,8 @@ class InferenceModel:
             train_config = yaml.safe_load(file)
         
         num_witnesses = len(train_config['data']['channels']) - 1
-        freq_low   = train_config['data']['freq_low']
-        freq_high  = train_config['data']['freq_high']
+        self.freq_low   = train_config['data']['freq_low']
+        self.freq_high  = train_config['data']['freq_high']
         filt_order = int(train_config['data']['filt_order'])
         self.sample_rate = sample_rate
 
@@ -30,7 +30,7 @@ class InferenceModel:
         self.X_scaler.load_state_dict(torch.load(os.path.join(train_dir, "X_scaler.pt")))
         
         # Initialize bandpass filter
-        self.bandpass = BandpassFilter(freq_low, freq_high, sample_rate, filt_order)
+        self.bandpass = BandpassFilter(self.freq_low, self.freq_high, sample_rate, filt_order)
         
         # Set channels 
         channels = train_config['data']['channels']

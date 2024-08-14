@@ -1,15 +1,13 @@
 import logging
 
-import h5py
 import torch
 from pathlib import Path
+import numpy as np
 
 from lightning import pytorch as pl
 from ml4gw.dataloading import InMemoryDataset
-from ml4gw.transforms import ChannelWiseScaler
 
-from utils.filt import BandpassFilter
-from clean.frames import FrameCrawler, frame_it, Buffer
+from clean.frames import FrameCrawler, frame_it, parse_frame_name
 from clean.model import InferenceModel
 
 
@@ -41,11 +39,10 @@ class DeepCleanInferenceDataset(pl.LightningDataModule):
 
         self.frame_iterator = frame_it(self.hoft_crawler, 
                                        self.witness_crawler, 
-                                       self.model.channels, 
+                                       self.channels_ordered_list, 
                                        self.model.sample_rate)
 
         self.update()
-        
 
     @property
     def strain_channel(self):
@@ -54,6 +51,10 @@ class DeepCleanInferenceDataset(pl.LightningDataModule):
     @property
     def witness_channels(self):
         return sorted(self.model.channels[1:])
+
+    @property
+    def channels_ordered_list(self):
+        return [self.strain_channel]+ self.witness_channels
 
     @property
     def num_witnesses(self):
@@ -70,12 +71,11 @@ class DeepCleanInferenceDataset(pl.LightningDataModule):
         # removing the very first in the buffer
         
         self.strain_fname, strain, witnesses = next(self.frame_iterator)
-
-        self.y_inference = torch.Tensor(strain)
+        self.prefix, self.t0, self.duration = parse_frame_name(self.strain_fname)
+        self.y_inference = torch.Tensor(np.array(strain, dtype=np.float64))
         self.X_inference = torch.Tensor(witnesses)
                 
         ## then normalize them
-        self.y_inference = self.model.y_scaler(self.y_inference)
         self.X_inference = self.model.X_scaler(self.X_inference)
         
         ## batching, bandpassing and moving the data to
@@ -87,7 +87,6 @@ class DeepCleanInferenceDataset(pl.LightningDataModule):
             coincident=True,
             shuffle=False,
             device = self.hparams.device,
-            #device=f"cuda:{self.trainer.device_ids[0]}",
         )
 
         self.y_inference = InMemoryDataset(
@@ -98,5 +97,4 @@ class DeepCleanInferenceDataset(pl.LightningDataModule):
             coincident=True,
             shuffle=False,
             device = self.hparams.device,
-            #device=f"cuda:{self.trainer.device_ids[0]}",
         )

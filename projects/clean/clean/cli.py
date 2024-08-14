@@ -18,6 +18,7 @@ def main():
     with open(args.config, 'r') as file:
         config = yaml.safe_load(file)
     
+
     # Initialize InferenceModel
     model = InferenceModel(config['train_dir'], config['sample_rate'], config['device'])
     
@@ -38,7 +39,7 @@ def main():
     )
     
     # Run the online inference process for a number of iterations (e.g., 100)
-    for k in range(100):
+    for k in range(500):
         online_inference.predict_and_write()
         online_inference.dataset.update()
         #print(f"iteration {k}")

@@ -39,7 +39,7 @@ def main():
     )
     
     # Run the online inference process for a number of iterations (e.g., 100)
-    for k in range(500):
+    for k in range(300):
         online_inference.predict_and_write()
         online_inference.dataset.update()
         #print(f"iteration {k}")

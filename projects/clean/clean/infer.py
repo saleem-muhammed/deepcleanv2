@@ -32,7 +32,8 @@ class OnlineInference:
         self.dataset = dataset
         self.outdir = outdir
         self.logdir = os.path.join(self.outdir, "logs")
-        self.edge2crop = int(1.0* self.model.sample_rate)
+        self.edge_pad = (0.2*self.model.sample_rate)
+        self.filter_pad = int(0.8*self.model.sample_rate)
         self.current_log_file = None
         self.current_date = None
 
@@ -50,12 +51,13 @@ class OnlineInference:
             Performs reverse scaling and bandpass of the noise prediction
         """
         self.noise = self.model.y_scaler(self.pred.cpu(), reverse=True)
+        self.noise = self.noise[self.edge_pad:-self.edge_pad]
         self.noise = self.model.bandpass(self.noise.cpu().detach().numpy())
         self.noise = torch.tensor(self.noise, device=self.device).flatten()
-        self.noise = self.noise[self.edge2crop:-self.edge2crop]
+        self.noise = self.noise[self.filter_pad:-self.filter_pad]
         
         self.raw   = list(self.dataset.y_inference)[0].to(self.device).flatten()
-        self.raw   = self.raw[self.edge2crop:-self.edge2crop]
+        self.raw   = self.raw[self.filter_pad:-self.filter_pad]
         self.raw   = self.raw.to(self.device) 
 
         self.cleaned = self.raw - self.noise

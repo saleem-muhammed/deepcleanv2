@@ -15,8 +15,8 @@ model:
   metric:
     class_path: train.metrics.OnlinePsdRatio
     init_args:
-      filter_pad: 1
-      edge_pad: 0.25
+      filter_pad: 0.8 
+      edge_pad: 0.2
   patience: 20
 data:
   # loading args
@@ -31,6 +31,7 @@ data:
 
   # preprocessing args
   batch_size: 512
+  # kernel_length: 3
   kernel_length: 3
   filt_order: 8
   # freq_low: []

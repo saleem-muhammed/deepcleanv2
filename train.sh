@@ -14,4 +14,4 @@ poetry run law run deepclean.tasks.Train \
     --gpus $GPU_INDEX \
     --data-fname $DATA_DIR/O3_AC_train_H1-1250916844-12288.hdf5 \
     --train-config ${HOME}/deepcleanv2/projects/train/config.yaml \
-    --output-dir ${RESULTS_DIR}/train-O3-H1-train_kernel_3 \
+    --output-dir ${RESULTS_DIR}/train-O3-H1-train_kernel_3_epad_0p2_fpad_0p8 \

@@ -56,6 +56,7 @@ class DeepCleanDataset(pl.LightningDataModule):
         valid_frac: float,
         train_stride: float,
         inference_sampling_rate: float,
+        edge_pad: float,
         start_offset: float = 0,
         filt_order: float = 8,
     ):
@@ -94,6 +95,7 @@ class DeepCleanDataset(pl.LightningDataModule):
         size = int(size * (1 - valid_frac))
         samples_per_epoch = (train_size - kernel_size) // stride + 1
         self.steps_per_epoch = int(samples_per_epoch // batch_size)
+        self.edge_pad = edge_pad
 
         # create some modules we'll use for pre/postprocessing
         self.X_scaler = ChannelWiseScaler(len(self.witness_channels))
@@ -236,10 +238,12 @@ class DeepCleanDataset(pl.LightningDataModule):
         do cleaning (1s frames).
         """
 
-        stride = int(self.sample_rate / self.hparams.inference_sampling_rate)
+
+        # stride = int(self.sample_rate / self.hparams.inference_sampling_rate)
+        stride = int((3 - 2*self.edge_pad)*self.sample_rate)
         witnesses = InMemoryDataset(
             X,
-            kernel_size=int(self.sample_rate),
+            kernel_size=int(3*self.sample_rate),
             stride=stride,
             batch_size=4 * self.hparams.batch_size,
             coincident=True,
@@ -249,8 +253,8 @@ class DeepCleanDataset(pl.LightningDataModule):
 
         strain = InMemoryDataset(
             y[None],
-            kernel_size=int(self.sample_rate),
-            stride=int(self.sample_rate),
+            kernel_size=int(3*self.sample_rate),
+            stride=int(3*self.sample_rate),
             batch_size=4 * self.hparams.batch_size,
             coincident=True,
             shuffle=False,

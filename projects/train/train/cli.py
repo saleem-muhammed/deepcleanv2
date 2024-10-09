@@ -2,6 +2,7 @@ import os
 
 import torch
 from lightning.pytorch.cli import LightningCLI
+from lightning.pytorch.cli import ReduceLROnPlateau
 
 from train.data import DeepCleanDataset
 from train.model import DeepClean
@@ -14,6 +15,7 @@ class AframeCLI(LightningCLI):
 
         parser.add_optimizer_args(torch.optim.Adam)
         parser.add_lr_scheduler_args(torch.optim.lr_scheduler.OneCycleLR)
+        # parser.add_lr_scheduler_args(ReduceLROnPlateau)
 
         parser.link_arguments(
             "data.num_witnesses",

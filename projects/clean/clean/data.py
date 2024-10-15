@@ -23,17 +23,16 @@ class DeepCleanInferenceDataset(pl.LightningDataModule):
         hoft_dir: str,
         witness_dir: str,
         model: InferenceModel, 
-        batch_size: int = 1,
-        clean_stride: float = 1,
-        kernel_length: float = 3,
+        batch_size: int = 32,
+        # clean_stride: float = 1,
+        inference_sampling_rate: float = 2,
+        kernel_size: float = 1,
         device : str = "cuda"
     ):
         super().__init__()
         self.__logger = logging.getLogger("DeepClean Dataset")
         self.save_hyperparameters(ignore=['model'])
         self.model = model
-        self.stride = int(clean_stride * self.model.sample_rate)
-                        
         self.hoft_crawler    = FrameCrawler (Path(hoft_dir))
         self.witness_crawler = FrameCrawler (Path(witness_dir))
 
@@ -62,7 +61,11 @@ class DeepCleanInferenceDataset(pl.LightningDataModule):
 
     @property
     def kernel_size(self):
-        return int(self.hparams.kernel_length * self.model.sample_rate)
+        return int(self.hparams.kernel_size * self.model.sample_rate)
+    
+    @property
+    def stride(self):
+        return int(self.model.sample_rate/self.hparams.inference_sampling_rate)
 
 
     def update(self):

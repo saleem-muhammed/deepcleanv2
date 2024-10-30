@@ -60,6 +60,10 @@ class DeepCleanInferenceDataset(pl.LightningDataModule):
         return len(self.model.channels) - 1
 
     @property
+    def sample_rate(self):
+        return self.model.sample_rate
+
+    @property
     def kernel_size(self):
         return int(self.hparams.kernel_size * self.model.sample_rate)
     
@@ -96,7 +100,7 @@ class DeepCleanInferenceDataset(pl.LightningDataModule):
             self.y_inference,
             kernel_size=self.kernel_size,
             batch_size=self.hparams.batch_size,
-            stride = self.stride, 
+            stride = self.kernel_size, 
             coincident=True,
             shuffle=False,
             device = self.hparams.device,

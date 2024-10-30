@@ -54,8 +54,8 @@ class OnlineInference:
         # Aggregating prediction to y_pred.
         sample_rate = self.model.sample_rate
         size = len(self.dataset.y_inference.X)
-        stride = self.dataset.stride
-        batch_size = len(next(iter(self.dataset.y_inference)))
+        stride = self.dataset.X_inference.stride
+        batch_size = len(next(iter(self.dataset.X_inference)))
         edge_pad = self.edge_pad
         filter_pad = self.filter_pad
         device = self.device

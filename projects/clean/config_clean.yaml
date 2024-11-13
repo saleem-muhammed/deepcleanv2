@@ -2,7 +2,8 @@ device: "cuda"
 sample_rate: 4096
 hoft_dir: "/home/chiajui.chou/ll_data_O4_review/kafka/H1/"
 witness_dir: "/home/chiajui.chou/ll_data_O4_review/lldetchar/H1/"
-outdir: '/home/chiajui.chou/deepcleanv2/myprojects/60Hz-O3-MDC/outdir/cleaned_frames_kernel-size-1'
+# outdir: '/home/chiajui.chou/deepcleanv2/myprojects/60Hz-O3-MDC/outdir/cleaned_frames_kernel-size-1'
+outdir: '/home/chiajui.chou/deepcleanv2/myprojects/60Hz-O3-MDC/outdir/cleaned_frames_kernel-size-compare'
 train_dir: "/home/chiajui.chou/deepclean/results/train-O3-H1-kernel_1_1_st_0p5_epad_0p2_fpad_0p8_lr_0p2_oclr/lightning_logs/version_0"
 
 # hoft_dir: "/home/muhammed.saleem/deepClean/deepcleanv2/data_replay/tests/H1/llhoft"

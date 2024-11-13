@@ -33,8 +33,8 @@ class DeepCleanInferenceDataset(pl.LightningDataModule):
         self.__logger = logging.getLogger("DeepClean Dataset")
         self.save_hyperparameters(ignore=['model'])
         self.model = model
-        self.hoft_crawler    = FrameCrawler (Path(hoft_dir))
-        self.witness_crawler = FrameCrawler (Path(witness_dir))
+        self.hoft_crawler    = FrameCrawler(Path(hoft_dir))
+        self.witness_crawler = FrameCrawler(Path(witness_dir))
 
         self.frame_iterator = frame_it(self.hoft_crawler, 
                                        self.witness_crawler, 

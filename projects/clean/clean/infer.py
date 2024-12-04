@@ -46,10 +46,10 @@ class OnlineInference:
         # Making 1 batch of prediction.
         # witness = next(iter(self.dataset.X_inference))
         # self.pred = self.model.model(witness.to(self.device))
-        self.pred = (
+        self.pred = [
             self.model.model(X) \
             for X in iter(self.dataset.X_inference)
-        )
+        ]
 
         # Aggregating prediction to y_pred.
         sample_rate = self.model.sample_rate
@@ -82,6 +82,8 @@ class OnlineInference:
         self.stop = 2 * sample_rate + filter_pad
         self.noise = self.y_pred[self.start:self.stop]
 
+        return self.noise
+
     def postprocess(self):
         """
             Performs reverse scaling and bandpass of the noise prediction
@@ -107,9 +109,11 @@ class OnlineInference:
                  data = self.raw, 
                  channel = self.dataset.strain_channel)
         
-        # ts_noise   = self.make_gwpy_TimeSeries(
-        #         data = self.noise, 
-        #         channel = self.dataset.strain_channel+"_pred")
+        self.ts_noise   = self.make_gwpy_TimeSeries(
+                data = self.noise, 
+                channel = self.dataset.strain_channel+"_pred")
+
+        return self.ts_noise, self.ts_raw, self.ts
 
     def compute_asdr(self):
         asd_cleaned  = self.ts.asd(fftlength=1,overlap=0.0,method='median')

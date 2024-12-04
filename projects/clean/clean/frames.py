@@ -1,6 +1,7 @@
 import logging
 import re
 import time
+import copy
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Literal, Optional, Tuple, Union
@@ -418,7 +419,10 @@ class Buffer:
             # commented out as the resample function is already doing the tapering
             
             # resample to the target rate
-            x = resample(self.x, length, window="hann")
+            # x = resample(self.x, length, window="hann")
+            x = copy.deepcopy(self.x)
+            diff = x - self.x
+            # print(f"Difference between the resampled and before resampled x in buffer: {diff}.")
             #x = resample(self.x, length, window="boxcar")
 
             # the below line was written for a sanity test

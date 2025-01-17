@@ -32,7 +32,8 @@ class OnlineInference:
         self.dataset = dataset
         self.outdir = outdir
         self.logdir = os.path.join(self.outdir, "logs")
-        self.edge2crop = int(1.0* self.model.sample_rate)
+        self.edge_pad = int(0.2*self.model.sample_rate)
+        self.filter_pad = int(0.8*self.model.sample_rate)
         self.current_log_file = None
         self.current_date = None
 
@@ -42,21 +43,59 @@ class OnlineInference:
             os.makedirs(self.logdir)
         
     def predict(self):
-        witness = list(self.dataset.X_inference)[0]
-        self.pred = self.model.model(witness.to(self.device))
+        # Making 1 batch of prediction.
+        # witness = next(iter(self.dataset.X_inference))
+        # self.pred = self.model.model(witness.to(self.device))
+        self.pred = [
+            self.model.model(X) \
+            for X in iter(self.dataset.X_inference)
+        ]
+
+        # Aggregating prediction to y_pred.
+        sample_rate = self.model.sample_rate
+        size = len(self.dataset.y_inference.X)
+        stride = self.dataset.X_inference.stride
+        batch_size = len(next(iter(self.dataset.X_inference)))
+        edge_pad = self.edge_pad
+        filter_pad = self.filter_pad
+        device = self.device
+        dtype = self.dataset.y_inference.X.dtype
+        self.y_pred = torch.zeros(
+            (size - edge_pad),
+            device=device,
+            dtype=dtype,
+        )
+        
+        get_idx = torch.arange(stride, device=device)
+        offset = int(sample_rate - edge_pad - stride)
+        get_idx += offset
+        set_idx = get_idx.view(1, -1).repeat(batch_size, 1)
+        batch_offset = torch.arange(batch_size, device=device)
+        set_idx += batch_offset[:, None] * stride
+        for i, y in enumerate(self.pred):
+            if not i:
+                self.y_pred[:offset] = y[0, :offset]
+            sidx = set_idx[:len(y)]
+            self.y_pred[sidx + i*batch_size*stride] = y[:, get_idx]
+
+        self.start = sample_rate - filter_pad
+        self.stop = 2 * sample_rate + filter_pad
+        self.noise = self.y_pred[self.start:self.stop]
+
+        return self.noise
 
     def postprocess(self):
         """
             Performs reverse scaling and bandpass of the noise prediction
         """
-        self.noise = self.model.y_scaler(self.pred.cpu(), reverse=True)
-        self.noise = self.model.bandpass(self.noise.cpu().detach().numpy())
+        self.noise = self.model.y_scaler(self.noise.double().cpu(), reverse=True)
+        self.noise = self.model.bandpass(self.noise.detach().numpy())
         self.noise = torch.tensor(self.noise, device=self.device).flatten()
-        self.noise = self.noise[self.edge2crop:-self.edge2crop]
+        self.noise = self.noise[self.filter_pad:-self.filter_pad].double()
         
-        self.raw   = list(self.dataset.y_inference)[0].to(self.device).flatten()
-        self.raw   = self.raw[self.edge2crop:-self.edge2crop]
-        self.raw   = self.raw.to(self.device) 
+        self.raw   = self.dataset.y_inference.X.to(self.device).flatten()
+        self.raw   = self.raw[self.start + self.filter_pad:self.stop - self.filter_pad]
+        self.raw   = self.raw.double() 
 
         self.cleaned = self.raw - self.noise
 
@@ -70,9 +109,11 @@ class OnlineInference:
                  data = self.raw, 
                  channel = self.dataset.strain_channel)
         
-        # ts_noise   = self.make_gwpy_TimeSeries(
-        #         data = self.noise, 
-        #         channel = self.dataset.strain_channel+"_pred")
+        self.ts_noise   = self.make_gwpy_TimeSeries(
+                data = self.noise, 
+                channel = self.dataset.strain_channel+"_pred")
+
+        return self.ts_noise, self.ts_raw, self.ts
 
     def compute_asdr(self):
         asd_cleaned  = self.ts.asd(fftlength=1,overlap=0.0,method='median')

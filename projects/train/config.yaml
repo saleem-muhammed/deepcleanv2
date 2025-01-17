@@ -10,13 +10,13 @@ model:
   loss:
     class_path: train.metrics.PsdRatio
     init_args:
-      fftlength: 2
+      fftlength: 1
       asd: true
   metric:
     class_path: train.metrics.OnlinePsdRatio
     init_args:
-      filter_pad: 0.5
-      edge_pad: 0.25
+      filter_pad: 0.8 
+      edge_pad: 0.2
   patience: 20
 data:
   # loading args
@@ -26,19 +26,24 @@ data:
   test_duration: 8192
   train_stride: 0.0625
   valid_frac: 0.33
-  inference_sampling_rate: 64
+  inference_sampling_rate: 2
   start_offset: 0
 
   # preprocessing args
   batch_size: 512
-  kernel_length: 8
+  kernel_length: 1
   filt_order: 8
   # freq_low: []
   # freq_high: []
 optimizer:
-  lr: 0.25
+  lr: 0.2
 lr_scheduler:
   pct_start: 0.33
+# lr_scheduler:
+#   monitor: "train_loss"
+#   factor: 0.02 
+#   patience: 1 
+#   threshold: 0.001
 trainer:
   # by default, use a local CSV logger.
   # Options in train task for using a

@@ -35,5 +35,5 @@ class InferenceModel:
         # Set channels 
         channels = train_config['data']['channels']
         # temporary fix for saleem's purpose
-        #channels[0] = 'H1:GDS-CALIB_STRAIN_CLEAN'
+        # channels[0] = 'H1:GDS-CALIB_STRAIN_CLEAN'
         self.channels = channels

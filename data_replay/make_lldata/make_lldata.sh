@@ -1,17 +1,22 @@
 #!/bin/bash
 
 IFO=H1
-# SOURCE=/home/chiajui.chou/dc-demo/data
-SOURCE=/home/chiajui.chou/dc-demo/data/O3_AC_clean_H1-1242962000-4096.gwf
-START=1242964048
-END=1242966096
-TAG=llhoft
-DESTINATION=/home/chiajui.chou/dc-demo/ll_data/${TAG}_buffer/${IFO}
+HOFT_TAG=HOFT
+DETCHAR_TAG=INMON
+HOFT_SOURCE=/home/chiajui.chou/ll_data_O4_review/unresampled_data/${IFO}_${HOFT_TAG}
+DETCHAR_SOURCE=/home/chiajui.chou/ll_data_O4_review/unresampled_data/${IFO}_${DETCHAR_TAG}
+HOFT_DESTINATION=/home/chiajui.chou/ll_data_O4_review/llhoft_buffer/${IFO}
+DETCHAR_DESTINATION=/home/chiajui.chou/ll_data_O4_review/lldetchar_buffer/${IFO}
+START=1250916945
+DURATION=10
+KIND=lldetchar
 
 python make_lldata.py \
     --ifo ${IFO} \
-    --source ${SOURCE} \
+    --hoft_source ${HOFT_SOURCE} \
+    --detchar_source ${DETCHAR_SOURCE} \
+    --hoft_destination ${HOFT_DESTINATION} \
+    --detchar_destination ${DETCHAR_DESTINATION} \
     --start ${START}\
-    --end ${END}\
-    --destination ${DESTINATION} \
-    --tag ${TAG}
+    --duration ${DURATION}\
+    --kind ${KIND}

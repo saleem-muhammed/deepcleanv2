@@ -1,13 +1,13 @@
 #!/bin/bash
 #set -x
 
-HOFT_SOURCE=/home/chiajui.chou/ll_data/llhoft_buffer
-HOFT_DESTINATION=/home/chiajui.chou/ll_data/data/kafka
-WITNESS_SOURCE=/home/chiajui.chou/ll_data/lldetchar_buffer
-WITNESS_DESTINATION=/home/chiajui.chou/ll_data/data/lldetchar
-START=1369291863
-DURATION=16384
-KEEP=300
+HOFT_SOURCE=/home/chiajui.chou/ll_data_O4_review/llhoft_buffer
+HOFT_DESTINATION=/home/chiajui.chou/ll_data_O4_review/kafka
+WITNESS_SOURCE=/home/chiajui.chou/ll_data_O4_review/lldetchar_buffer
+WITNESS_DESTINATION=/home/chiajui.chou/ll_data_O4_review/lldetchar
+START=1250916844
+DURATION=10
+KEEP=12288
 
 function start_replay {
     ifo=$1
@@ -32,5 +32,5 @@ function start_replay {
 }
 
 start_replay H1 &> replay_H1.out &
-start_replay L1 &> replay_L1.out &
-start_replay K1 &> replay_K1.out &
+# start_replay L1 &> replay_L1.out &
+# start_replay K1 &> replay_K1.out &

@@ -1,6 +1,6 @@
 import os
 import yaml
-from plot.plot import LivePlotter
+from plot import LivePlotter
 
 def load_config(config_file):
     with open(config_file, 'r') as file:

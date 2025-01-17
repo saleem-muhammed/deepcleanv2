@@ -420,8 +420,8 @@ class Buffer:
             
             # resample to the target rate
             # x = resample(self.x, length, window="hann")
-            x = copy.deepcopy(self.x)
-            diff = x - self.x
+            # x = copy.deepcopy(self.x)
+            # diff = x - self.x
             # print(f"Difference between the resampled and before resampled x in buffer: {diff}.")
             #x = resample(self.x, length, window="boxcar")
 
@@ -431,9 +431,13 @@ class Buffer:
             # slice out the middle second of our buffer
             # to return, then cut off the earliest second
             # that we no longer need
-            size = int(self.target_sample_rate)
+            # size = int(self.target_sample_rate)
             #x = x[-2 * size : -size]
-            self.x = self.x[int(self.sample_rate) :]
+            # self.x = self.x[int(self.sample_rate) :]
+
+            # Using gwpy to resample
+            x = x.resample(self.target_sample_rate)
+
             return x
 
         # otherwise indicate that we don't have
